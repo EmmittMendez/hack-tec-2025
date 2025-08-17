@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLearningPathStore } from "../store/learningPathStore";
+import VirtualAssistant from "../components/VirtualAssistant";
 
 function Resources() {
   const [activeCategory, setActiveCategory] = useState("todos");
@@ -406,6 +407,77 @@ function Resources() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
+          </div>
+        </div>
+
+        {/* Asistente Virtual - Sección destacada */}
+        <div className="mb-12">
+          <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border border-purple-500/30 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Ascend AI - Tu Mentor Virtual</h2>
+                  <p className="text-purple-300">Asistente inteligente disponible 24/7</p>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-2 text-purple-300">
+                <span className="text-sm bg-green-500/20 text-green-400 px-2 py-1 rounded-full animate-pulse">
+                  ● En línea
+                </span>
+              </div>
+            </div>
+            
+            <p className="text-slate-300 mb-6">
+              Tu compañero de estudio inteligente está aquí para ayudarte. Haz preguntas por voz, 
+              adjunta documentos para análisis, recibe planes de estudio personalizados y obtén 
+              respuestas inmediatas a tus dudas académicas.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-purple-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">🎤</span>
+                  <h3 className="font-semibold text-white">Comando por Voz</h3>
+                </div>
+                <p className="text-sm text-slate-300">
+                  Habla naturalmente y obtén respuestas instantáneas
+                </p>
+              </div>
+              
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">📎</span>
+                  <h3 className="font-semibold text-white">Análisis de Archivos</h3>
+                </div>
+                <p className="text-sm text-slate-300">
+                  Adjunta PDFs, documentos y obtén análisis detallados
+                </p>
+              </div>
+              
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-green-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">🎯</span>
+                  <h3 className="font-semibold text-white">Planes Personalizados</h3>
+                </div>
+                <p className="text-sm text-slate-300">
+                  Estrategias de estudio adaptadas a tu nivel
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <span>💡</span>
+                <span>Encuentra el botón flotante en la esquina inferior derecha</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-purple-400">Powered by</span>
+                <span className="text-xs font-semibold text-purple-300">Google Gemini AI</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1153,6 +1225,9 @@ function Resources() {
           </div>
         </div>
       )}
+      
+      {/* Asistente Virtual */}
+      <VirtualAssistant />
     </div>
   );
 }
