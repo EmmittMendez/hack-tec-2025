@@ -57,15 +57,21 @@ function Quiz() {
   const addLearningPath = useLearningPathStore(
     (state) => state.addLearningPath
   );
-  const handleGeminiRoute = async () => {
+  const handleGeminiRoute = async (finalAnswers = null) => {
     setIsGeneratingRoute(true);
     try {
-      const result = await getGeminiRoute(quizAnswers);
-      console.log(result);
+      const answersToUse = finalAnswers || quizAnswers;
+      console.log("Enviando respuestas a Gemini:", answersToUse);
+      const result = await getGeminiRoute(answersToUse);
+      console.log("Resultado de Gemini:", result);
       setQuizResults(result);
       addLearningPath(result);
     } catch (error) {
       console.error("Error generating route with Gemini:", error);
+      // Mostrar un mensaje de error al usuario
+      alert(
+        "Error al generar la ruta de aprendizaje. Por favor, inténtalo de nuevo."
+      );
     } finally {
       setIsGeneratingRoute(false);
     }
@@ -412,9 +418,9 @@ function Quiz() {
   };
 
   const onSubmit = (data) => {
-    // generateLearningRoute({ ...getValues(), ...data });
-    setQuizAnswers({ ...quizAnswers, ...data });
-    handleGeminiRoute();
+    const finalAnswers = { ...quizAnswers, ...data };
+    setQuizAnswers(finalAnswers);
+    handleGeminiRoute(finalAnswers);
   };
 
   if (quizResults) {
@@ -463,24 +469,33 @@ function Quiz() {
               </div>
 
               <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">{quizResults.title}</h2>
-                <p className="text-slate-300 mb-4">{quizResults.description}</p>
+                <h2 className="text-2xl font-bold mb-2">
+                  {quizResults?.title || "Ruta de Aprendizaje"}
+                </h2>
+                <p className="text-slate-300 mb-4">
+                  {quizResults?.description || "Descripción no disponible"}
+                </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <span className="text-blue-400">⏱️</span>
-                    <span>{quizResults.estimatedTime} horas estimadas</span>
+                    <span>
+                      {quizResults?.estimatedTime || "N/A"} horas estimadas
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-green-400">📚</span>
                     <span>
-                      {quizResults.courses ? quizResults.courses.length : 0}{" "}
+                      {quizResults?.courses ? quizResults.courses.length : 0}{" "}
                       cursos incluidos
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">⭐</span>
-                    <span>Nivel {quizResults.difficulty}</span>
+                    <span>
+                      Nivel{" "}
+                      {quizResults?.difficulty || quizResults?.level || "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -496,7 +511,7 @@ function Quiz() {
                 Cursos en tu ruta
               </h3>
               <div className="space-y-3">
-                {quizResults.courses &&
+                {quizResults?.courses && quizResults.courses.length > 0 ? (
                   quizResults.courses.map((course, index) => (
                     <div
                       key={index}
@@ -507,7 +522,12 @@ function Quiz() {
                       </div>
                       <span className="text-sm">{course}</span>
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  <p className="text-slate-400 text-sm">
+                    No hay cursos disponibles
+                  </p>
+                )}
               </div>
             </div>
 
@@ -518,7 +538,7 @@ function Quiz() {
                 Habilidades que desarrollarás
               </h3>
               <div className="flex flex-wrap gap-2">
-                {quizResults.skills &&
+                {quizResults?.skills && quizResults.skills.length > 0 ? (
                   quizResults.skills.map((skill, index) => (
                     <span
                       key={index}
@@ -526,7 +546,12 @@ function Quiz() {
                     >
                       {skill}
                     </span>
-                  ))}
+                  ))
+                ) : (
+                  <p className="text-slate-400 text-sm">
+                    No hay habilidades especificadas
+                  </p>
+                )}
               </div>
 
               <div className="mt-6">
@@ -535,7 +560,8 @@ function Quiz() {
                   Posibles carreras
                 </h4>
                 <div className="space-y-2">
-                  {quizResults.careerPaths &&
+                  {quizResults?.careerPaths &&
+                  quizResults.careerPaths.length > 0 ? (
                     quizResults.careerPaths.map((career, index) => (
                       <div
                         key={index}
@@ -544,7 +570,12 @@ function Quiz() {
                         <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
                         {career}
                       </div>
-                    ))}
+                    ))
+                  ) : (
+                    <p className="text-slate-400 text-sm">
+                      No hay carreras especificadas
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -557,7 +588,7 @@ function Quiz() {
               Recursos personalizados para ti
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {quizResults.resources &&
+              {quizResults?.resources && quizResults.resources.length > 0 ? (
                 quizResults.resources.map((resource, index) => {
                   const resourceData = resourceTypes.find(
                     (r) => r.id === resource.type
@@ -567,16 +598,25 @@ function Quiz() {
                       key={index}
                       className="text-center p-4 bg-slate-800 rounded-lg"
                     >
-                      <div className="text-2xl mb-2">{resourceData?.icon}</div>
+                      <div className="text-2xl mb-2">
+                        {resourceData?.icon || "📚"}
+                      </div>
                       <div className="font-medium text-sm mb-1">
-                        {resourceData?.name}
+                        {resourceData?.name || resource.type || "Recurso"}
                       </div>
                       <div className="text-xs text-slate-400">
-                        {resource.count} disponibles
+                        {resource.count || "Varios"} disponibles
                       </div>
                     </div>
                   );
-                })}
+                })
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-slate-400">
+                    No hay recursos específicos disponibles
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
