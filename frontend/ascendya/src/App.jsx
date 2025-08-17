@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
-import useStore from "./store/useStore";
+import useUserStore from "./store/userStore";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -11,7 +11,7 @@ import Navbar from "./components/layout/Navbar";
 import Resources from "./pages/Resources";
 
 function App() {
-  const { checkAuth } = useStore();
+  const { checkAuth } = useUserStore();
 
   useEffect(() => {
     // Verificar el estado de autenticación al cargar la aplicación

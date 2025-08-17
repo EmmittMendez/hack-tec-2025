@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import useStore from '../store/useStore';
+import useUserStore from '../store/userStore';
 
 // Esquema de validación
 const loginSchema = yup.object({
@@ -13,7 +13,7 @@ const loginSchema = yup.object({
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { login, loading, error, clearError } = useStore();
+  const { loginUser, loading, error, clearError } = useUserStore();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -27,7 +27,7 @@ const LoginForm = () => {
   const onSubmit = async (data) => {
     clearError();
     try {
-      await login(data.username, data.password);
+      await loginUser(data.username, data.password);
       navigate('/dashboard'); // Redirigir después del login exitoso
     } catch (error) {
       // El error ya se maneja en el store

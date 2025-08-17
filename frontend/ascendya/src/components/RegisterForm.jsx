@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import useStore from '../store/useStore';
+import useUserStore from '../store/userStore';
 
 // Estados de México
 const ESTADOS_MEXICO = [
@@ -55,7 +55,7 @@ const registerSchema = yup.object({
 
 const RegisterForm = () => {
   const navigate = useNavigate();
-  const { register: registerUser, loading, error, clearError } = useStore();
+  const { registerUser, loading, error, clearError } = useUserStore();
   const [showPassword, setShowPassword] = useState(false);
 
   const {

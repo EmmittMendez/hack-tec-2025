@@ -1,12 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import useStore from '../../store/useStore';
+import useUserStore from '../../store/userStore';
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useStore();
+  const { isAuthenticated, user, logout } = useUserStore();
 
   const navLinks = [
     { name: 'Inicio', path: '/' },
