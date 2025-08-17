@@ -360,7 +360,7 @@ function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 text-white">
-            ¡Hola {user?.firstName || 'Edgar'}! 👋
+            ¡Hola {user?.nombres} {user?.apellidos}! 👋
           </h1>
           <p className="text-slate-400">
             Aquí tienes un resumen de tu progreso de aprendizaje

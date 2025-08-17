@@ -94,11 +94,11 @@ function Navbar() {
                 >
                   <img
                     src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'}
-                    alt={user?.firstName || 'Usuario'}
+                    alt={user?.nombres || 'Usuario'}
                     className="w-8 h-8 rounded-full border-2 border-slate-600"
                   />
                   <span className="hidden md:block text-sm font-medium">
-                    {user?.firstName || 'Perfil'}
+                    {user?.nombres || 'Perfil'}
                   </span>
                   <svg
                     className={`w-4 h-4 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}
@@ -115,7 +115,7 @@ function Navbar() {
                   <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-lg py-1 z-50">
                     <div className="px-4 py-2 border-b border-slate-700">
                       <p className="text-sm font-medium text-white">
-                        {user?.firstName} {user?.lastName}
+                        {user?.nombres} {user?.apellidos}
                       </p>
                       <p className="text-xs text-slate-400">
                         {user?.email}
