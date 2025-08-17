@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {v4 as uuidv4} from 'uuid'
 import * as yup from 'yup';
-import userStore from '../store/userStore';
+import useUserStore from '../store/userStore';
 
 // Esquema de validación con Yup
 const schema = yup.object({
@@ -58,7 +58,7 @@ const schema = yup.object({
 
 function Register() {
   const navigate = useNavigate();
-  const { setUser, setLoading } = userStore();
+  const { registerUser, loading, error } = useUserStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 

@@ -6,7 +6,7 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useUserStore();
+  const { isAuthenticated, user, logoutUser } = useUserStore();
 
   const navLinks = [
     { name: 'Inicio', path: '/' },
@@ -19,7 +19,7 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = async () => {
-    await logout();
+    await logoutUser();
     navigate('/');
     setIsMenuOpen(false);
   };
