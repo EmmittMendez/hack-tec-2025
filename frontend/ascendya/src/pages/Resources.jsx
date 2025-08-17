@@ -1,500 +1,634 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import useStore from '../store/useStore';
+import { Link } from 'react-router-dom';
 
-// Esquema de validación con Yup
-const schema = yup.object({
-  firstName: yup
-    .string()
-    .required('El nombre es obligatorio')
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(50, 'El nombre no puede exceder 50 caracteres'),
-  
-  lastName: yup
-    .string()
-    .required('El apellido es obligatorio')
-    .min(2, 'El apellido debe tener al menos 2 caracteres')
-    .max(50, 'El apellido no puede exceder 50 caracteres'),
-  
-  email: yup
-    .string()
-    .required('El email es obligatorio')
-    .email('Debe ser un email válido'),
-  
-  password: yup
-    .string()
-    .required('La contraseña es obligatoria')
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'La contraseña debe contener al menos una mayúscula, una minúscula y un número'
-    ),
-  
-  confirmPassword: yup
-    .string()
-    .required('Confirma tu contraseña')
-    .oneOf([yup.ref('password')], 'Las contraseñas no coinciden'),
-  
-  age: yup
-    .number()
-    .required('La edad es obligatoria')
-    .min(13, 'Debes tener al menos 13 años')
-    .max(100, 'Edad no válida'),
-  
-  country: yup
-    .string()
-    .required('Selecciona tu país'),
-  
-  educationLevel: yup
-    .string()
-    .required('Selecciona tu nivel educativo'),
-  
-  interests: yup
-    .array()
-    .min(1, 'Selecciona al menos un área de interés'),
-  
-  terms: yup
-    .boolean()
-    .oneOf([true], 'Debes aceptar los términos y condiciones')
-});
-
-function Register() {
-  const navigate = useNavigate();
-  const { setUser, setLoading } = useStore();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-    setValue,
-    getValues
-  } = useForm({
-    resolver: yupResolver(schema),
-    defaultValues: {
-      interests: []
-    }
+function Resources() {
+  const [activeCategory, setActiveCategory] = useState('todos');
+  const [accessibilitySettings, setAccessibilitySettings] = useState({
+    fontSize: 'normal',
+    highContrast: false,
+    subtitles: true,
+    audioDescription: false,
+    signLanguage: false,
+    slowMotion: false,
+    keyboardNavigation: true
   });
 
-  const countries = [
-    'México', 'España', 'Argentina', 'Colombia', 'Chile', 'Perú', 
-    'Venezuela', 'Ecuador', 'Bolivia', 'Uruguay', 'Paraguay', 
-    'Estados Unidos', 'Canadá', 'Brasil', 'Otro'
+  // Videos/clases de preparación universitaria
+  const currentVideos = [
+    {
+      id: 1,
+      title: "Álgebra Lineal: Sistemas de Ecuaciones y Matrices",
+      subject: "Matemáticas",
+      progress: 45,
+      duration: "15 min 27 seg",
+      thumbnail: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=300&h=200&fit=crop",
+      instructor: "Dra. María González",
+      isLive: false,
+      hasSubtitles: true,
+      hasSignLanguage: true,
+      hasAudioDescription: true,
+      difficulty: "Intermedio"
+    },
+    {
+      id: 2,
+      title: "Química Orgánica: Hidrocarburos y Nomenclatura",
+      subject: "Química",
+      progress: 100,
+      duration: "22 min 15 seg",
+      thumbnail: "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=300&h=200&fit=crop",
+      instructor: "Dr. Carlos Ruiz",
+      isLive: false,
+      hasSubtitles: true,
+      hasSignLanguage: false,
+      hasAudioDescription: true,
+      difficulty: "Avanzado"
+    },
+    {
+      id: 3,
+      title: "Física: Mecánica Clásica y Leyes de Newton",
+      subject: "Física",
+      progress: 23,
+      duration: "18 min 08 seg",
+      thumbnail: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=300&h=200&fit=crop",
+      instructor: "Dr. Ana Martín",
+      isLive: false,
+      hasSubtitles: true,
+      hasSignLanguage: true,
+      hasAudioDescription: false,
+      difficulty: "Intermedio"
+    },
+    {
+      id: 4,
+      title: "Historia Universal: Revolución Industrial",
+      subject: "Historia",
+      progress: 0,
+      duration: "25 min 33 seg",
+      thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
+      instructor: "Lic. Diego López",
+      isLive: true,
+      hasSubtitles: true,
+      hasSignLanguage: true,
+      hasAudioDescription: true,
+      difficulty: "Básico"
+    }
   ];
 
-  const educationLevels = [
-    'Secundaria en curso',
-    'Secundaria completada',
-    'Preparatoria en curso',
-    'Preparatoria completada',
-    'Universidad en curso',
-    'Universidad completada',
-    'Posgrado'
+  // Rutas de aprendizaje universitarias
+  const learningPaths = [
+    {
+      id: 1,
+      title: "Preparación EXANI-II (Ingeniería)",
+      courses: 24,
+      progress: 67,
+      totalHours: 120,
+      type: "Ruta Especializada",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+      downloadable: true,
+      subjects: ["Matemáticas", "Física", "Química"]
+    },
+    {
+      id: 2,
+      title: "Examen de Admisión UNAM (Área 1)",
+      courses: 18,
+      progress: 12,
+      totalHours: 85,
+      type: "Ruta Oficial",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
+      downloadable: true,
+      subjects: ["Matemáticas", "Física", "Química", "Biología"]
+    },
+    {
+      id: 3,
+      title: "Mi ruta personalizada",
+      courses: 8,
+      progress: 34,
+      totalHours: 45,
+      type: "Ruta Personalizada",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
+      downloadable: true,
+      subjects: ["Literatura", "Historia"]
+    },
+    {
+      id: 4,
+      title: "Preparación IPN",
+      courses: 15,
+      progress: 8,
+      totalHours: 95,
+      type: "Ruta Especializada",
+      avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=40&h=40&fit=crop&crop=face",
+      downloadable: true,
+      subjects: ["Matemáticas", "Física", "Química"]
+    }
   ];
 
-  const interestAreas = [
-    'Tecnología', 'Medicina', 'Ingeniería', 'Arte y Diseño',
-    'Negocios', 'Ciencias', 'Educación', 'Deportes',
-    'Música', 'Literatura', 'Psicología', 'Derecho'
+  // Cursos de materias universitarias
+  const recommendedCourses = [
+    {
+      id: 1,
+      title: "Cálculo Diferencial e Integral",
+      instructor: "Dr. Sebastián Delmont",
+      rating: 4.8,
+      thumbnail: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=300&h=200&fit=crop",
+      category: "Matemáticas",
+      level: "Intermedio",
+      duration: "45h 25min",
+      university: "Para UNAM, IPN, UAM"
+    },
+    {
+      id: 2,
+      title: "Biología Molecular y Celular",
+      instructor: "Dra. Anna Espinoza",
+      rating: 4.7,
+      thumbnail: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&h=200&fit=crop",
+      category: "Biología",
+      level: "Avanzado",
+      duration: "38h 45min",
+      university: "Para Medicina"
+    },
+    {
+      id: 3,
+      title: "Literatura Mexicana e Hispanoamericana",
+      instructor: "Mtro. Carlos José Rojas",
+      rating: 4.5,
+      thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
+      category: "Literatura",
+      level: "Intermedio",
+      duration: "28h 20min",
+      university: "Para Humanidades"
+    },
+    {
+      id: 4,
+      title: "Química Analítica y Cuantitativa",
+      instructor: "Dra. María Camila Lenis",
+      rating: 4.6,
+      thumbnail: "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=300&h=200&fit=crop",
+      category: "Química",
+      level: "Avanzado",
+      duration: "42h 15min",
+      university: "Para Ingeniería Química"
+    },
+    {
+      id: 5,
+      title: "Geografía y Medio Ambiente",
+      instructor: "Lic. Jaivic Villegas",
+      rating: 4.4,
+      thumbnail: "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=300&h=200&fit=crop",
+      category: "Geografía",
+      level: "Básico",
+      duration: "25h 30min",
+      university: "Para Ciencias Sociales"
+    }
   ];
 
-  const watchedInterests = watch('interests');
+  const categories = [
+    { id: 'todos', name: 'Todas las materias', count: 125 },
+    { id: 'matematicas', name: 'Matemáticas', count: 45 },
+    { id: 'ciencias', name: 'Ciencias', count: 38 },
+    { id: 'humanidades', name: 'Humanidades', count: 22 },
+    { id: 'sociales', name: 'Ciencias Sociales', count: 20 }
+  ];
 
-  const handleInterestChange = (interest) => {
-    const currentInterests = getValues('interests') || [];
-    const newInterests = currentInterests.includes(interest)
-      ? currentInterests.filter(i => i !== interest)
-      : [...currentInterests, interest];
-    
-    setValue('interests', newInterests);
+  const toggleAccessibilityOption = (option) => {
+    setAccessibilitySettings(prev => ({
+      ...prev,
+      [option]: !prev[option]
+    }));
   };
 
-  const onSubmit = async (data) => {
-    try {
-      setLoading(true);
-      
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simular usuario registrado
-      const newUser = {
-        id: Date.now(),
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        country: data.country,
-        educationLevel: data.educationLevel,
-        interests: data.interests,
-        createdAt: new Date().toISOString()
-      };
-      
-      setUser(newUser);
-      navigate('/quiz'); // Redirigir al quiz después del registro
-      
-    } catch (error) {
-      console.error('Error al registrar:', error);
-    } finally {
-      setLoading(false);
-    }
+  const downloadLearningPath = (pathId) => {
+    // Simular descarga de ruta
+    alert(`Descargando ruta de aprendizaje ${pathId} para acceso offline...`);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div 
+      className={`min-h-screen bg-slate-950 text-white ${
+        accessibilitySettings.fontSize === 'large' ? 'text-lg' : 
+        accessibilitySettings.fontSize === 'small' ? 'text-sm' : 'text-base'
+      } ${accessibilitySettings.highContrast ? 'filter contrast-150' : ''}`}
+    >
+      {/* Panel de Accesibilidad */}
+      <div className="bg-slate-900 border-b border-slate-700 p-4">
+        <div className="max-w-7xl mx-auto">
+          <details className="group">
+            <summary className="flex items-center gap-2 cursor-pointer text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 rounded">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium">Opciones de Accesibilidad</span>
+              <svg className="w-4 h-4 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+              {/* Tamaño de fuente */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Tamaño de texto</label>
+                <select 
+                  value={accessibilitySettings.fontSize}
+                  onChange={(e) => setAccessibilitySettings(prev => ({...prev, fontSize: e.target.value}))}
+                  className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="small">Pequeño</option>
+                  <option value="normal">Normal</option>
+                  <option value="large">Grande</option>
+                </select>
+              </div>
+
+              {/* Alto contraste */}
+              <button
+                onClick={() => toggleAccessibilityOption('highContrast')}
+                className={`p-2 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  accessibilitySettings.highContrast ? 'bg-green-500 text-white' : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                Alto Contraste
+              </button>
+
+              {/* Subtítulos */}
+              <button
+                onClick={() => toggleAccessibilityOption('subtitles')}
+                className={`p-2 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  accessibilitySettings.subtitles ? 'bg-green-500 text-white' : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                Subtítulos
+              </button>
+
+              {/* Descripción de audio */}
+              <button
+                onClick={() => toggleAccessibilityOption('audioDescription')}
+                className={`p-2 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  accessibilitySettings.audioDescription ? 'bg-green-500 text-white' : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                Audio Descripción
+              </button>
+
+              {/* Lengua de señas */}
+              <button
+                onClick={() => toggleAccessibilityOption('signLanguage')}
+                className={`p-2 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  accessibilitySettings.signLanguage ? 'bg-green-500 text-white' : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                Lengua de Señas
+              </button>
+
+              {/* Velocidad lenta */}
+              <button
+                onClick={() => toggleAccessibilityOption('slowMotion')}
+                className={`p-2 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  accessibilitySettings.slowMotion ? 'bg-green-500 text-white' : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                Velocidad 0.5x
+              </button>
+
+              {/* Navegación por teclado */}
+              <button
+                onClick={() => toggleAccessibilityOption('keyboardNavigation')}
+                className={`p-2 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  accessibilitySettings.keyboardNavigation ? 'bg-green-500 text-white' : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                Navegación Teclado
+              </button>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-6">
-            <div className="bg-gradient-to-r from-green-400 to-blue-500 p-2 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <span className="text-2xl font-bold text-white">Ascendia</span>
-          </div>
-          
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Crea tu cuenta
-          </h1>
-          <p className="text-slate-400 mb-6">
-            Comienza tu journey educativo personalizado
-          </p>
-          
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 text-sm font-medium">
-            🎉 ¡Es completamente gratis!
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold mb-2">Edgar, continúa preparándote para la universidad</h1>
+          <div className="flex items-center gap-2 text-slate-400">
+            <Link 
+              to="/courses" 
+              className="text-green-400 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 rounded"
+              tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
+            >
+              Ver mis cursos de preparación
+            </Link>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </div>
 
-        {/* Formulario */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            
-            {/* Información Personal */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <span className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-white">1</span>
-                Información Personal
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Nombre */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    {...register('firstName')}
-                    className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                      errors.firstName 
-                        ? 'border-red-500 focus:ring-red-500/50' 
-                        : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                    }`}
-                    placeholder="Tu nombre"
+        {/* Videos/Clases Actuales */}
+        <div className="mb-12">
+          <h2 className="text-xl font-bold mb-6">Continúa con tus clases</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {currentVideos.map((video, index) => (
+              <div 
+                key={video.id} 
+                className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg"
+                tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
+                role="button"
+                aria-label={`Reproducir clase: ${video.title}, duración ${video.duration}, progreso ${video.progress}%`}
+              >
+                <div className="relative">
+                  <img 
+                    src={video.thumbnail} 
+                    alt={`Clase de ${video.subject}: ${video.title}`}
+                    className="w-full h-40 object-cover rounded-lg"
                   />
-                  {errors.firstName && (
-                    <p className="mt-1 text-sm text-red-400">{errors.firstName.message}</p>
-                  )}
-                </div>
-
-                {/* Apellido */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Apellido *
-                  </label>
-                  <input
-                    type="text"
-                    {...register('lastName')}
-                    className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                      errors.lastName 
-                        ? 'border-red-500 focus:ring-red-500/50' 
-                        : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                    }`}
-                    placeholder="Tu apellido"
-                  />
-                  {errors.lastName && (
-                    <p className="mt-1 text-sm text-red-400">{errors.lastName.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  {...register('email')}
-                  className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.email 
-                      ? 'border-red-500 focus:ring-red-500/50' 
-                      : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                  }`}
-                  placeholder="tu@email.com"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
-                )}
-              </div>
-
-              {/* Contraseñas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                {/* Contraseña */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Contraseña *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      {...register('password')}
-                      className={`w-full px-4 py-3 pr-12 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                        errors.password 
-                          ? 'border-red-500 focus:ring-red-500/50' 
-                          : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                      }`}
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {showPassword ? (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                        ) : (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        )}
-                      </svg>
-                    </button>
+                  
+                  {/* Accessibility features indicators */}
+                  <div className="absolute top-2 left-2 flex gap-1">
+                    {video.hasSubtitles && (
+                      <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded" title="Tiene subtítulos">
+                        CC
+                      </div>
+                    )}
+                    {video.hasSignLanguage && (
+                      <div className="bg-purple-500 text-white text-xs px-1 py-0.5 rounded" title="Tiene lengua de señas">
+                        🤟
+                      </div>
+                    )}
+                    {video.hasAudioDescription && (
+                      <div className="bg-orange-500 text-white text-xs px-1 py-0.5 rounded" title="Tiene audio descripción">
+                        AD
+                      </div>
+                    )}
                   </div>
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
-                  )}
-                </div>
-
-                {/* Confirmar Contraseña */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Confirmar Contraseña *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      {...register('confirmPassword')}
-                      className={`w-full px-4 py-3 pr-12 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                        errors.confirmPassword 
-                          ? 'border-red-500 focus:ring-red-500/50' 
-                          : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                      }`}
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {showConfirmPassword ? (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                        ) : (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        )}
+                  
+                  {/* Play Button */}
+                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
                       </svg>
-                    </button>
+                    </div>
                   </div>
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-400">{errors.confirmPassword.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* Información Adicional */}
-            <div className="border-t border-slate-700 pt-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold text-white">2</span>
-                Información Adicional
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Edad */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Edad *
-                  </label>
-                  <input
-                    type="number"
-                    {...register('age')}
-                    className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                      errors.age 
-                        ? 'border-red-500 focus:ring-red-500/50' 
-                        : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                    }`}
-                    placeholder="18"
-                    min="13"
-                    max="100"
-                  />
-                  {errors.age && (
-                    <p className="mt-1 text-sm text-red-400">{errors.age.message}</p>
+                  {/* Progress Indicator */}
+                  {video.progress > 0 && (
+                    <div className="absolute top-3 right-3">
+                      <div className={`w-8 h-8 rounded-full border-2 ${video.progress === 100 ? 'border-green-500 bg-green-500' : 'border-blue-500'} flex items-center justify-center`}>
+                        {video.progress === 100 ? (
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <span className="text-xs font-bold text-white">{video.progress}%</span>
+                        )}
+                      </div>
+                    </div>
                   )}
+
+                  {/* Duration */}
+                  <div className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    {video.duration}
+                  </div>
+
+                  {/* Live indicator */}
+                  {video.isLive && (
+                    <div className="absolute bottom-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded animate-pulse">
+                      🔴 EN VIVO
+                    </div>
+                  )}
+
+                  {/* Difficulty level */}
+                  <div className="absolute top-3 right-12 bg-slate-700/90 text-white text-xs px-2 py-1 rounded">
+                    {video.difficulty}
+                  </div>
                 </div>
 
-                {/* País */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    País *
-                  </label>
-                  <select
-                    {...register('country')}
-                    className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white focus:outline-none focus:ring-2 transition-colors ${
-                      errors.country 
-                        ? 'border-red-500 focus:ring-red-500/50' 
-                        : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                    }`}
-                  >
-                    <option value="">Selecciona tu país</option>
-                    {countries.map(country => (
-                      <option key={country} value={country}>{country}</option>
-                    ))}
-                  </select>
-                  {errors.country && (
-                    <p className="mt-1 text-sm text-red-400">{errors.country.message}</p>
-                  )}
+                <div className="mt-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                      {video.subject}
+                    </span>
+                  </div>
+                  <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-green-400 group-focus:text-green-400 transition-colors">
+                    {video.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {video.instructor}
+                  </p>
                 </div>
               </div>
-
-              {/* Nivel Educativo */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Nivel Educativo *
-                </label>
-                <select
-                  {...register('educationLevel')}
-                  className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white focus:outline-none focus:ring-2 transition-colors ${
-                    errors.educationLevel 
-                      ? 'border-red-500 focus:ring-red-500/50' 
-                      : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                  }`}
-                >
-                  <option value="">Selecciona tu nivel educativo</option>
-                  {educationLevels.map(level => (
-                    <option key={level} value={level}>{level}</option>
-                  ))}
-                </select>
-                {errors.educationLevel && (
-                  <p className="mt-1 text-sm text-red-400">{errors.educationLevel.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Áreas de Interés */}
-            <div className="border-t border-slate-700 pt-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <span className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-xs font-bold text-white">3</span>
-                Áreas de Interés
-              </h3>
-              
-              <p className="text-slate-400 text-sm mb-4">
-                Selecciona las áreas que más te interesan (mínimo 1)
-              </p>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {interestAreas.map(interest => {
-                  const isSelected = watchedInterests?.includes(interest);
-                  return (
-                    <button
-                      key={interest}
-                      type="button"
-                      onClick={() => handleInterestChange(interest)}
-                      className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium ${
-                        isSelected
-                          ? 'border-green-500 bg-green-500/20 text-green-400'
-                          : 'border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-500'
-                      }`}
-                    >
-                      {interest}
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.interests && (
-                <p className="mt-2 text-sm text-red-400">{errors.interests.message}</p>
-              )}
-            </div>
-
-            {/* Términos y Condiciones */}
-            <div className="border-t border-slate-700 pt-6">
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  {...register('terms')}
-                  className="mt-1 w-4 h-4 text-green-500 bg-slate-800 border-slate-600 rounded focus:ring-green-500"
-                />
-                <div>
-                  <label className="text-sm text-slate-300">
-                    Acepto los{' '}
-                    <a href="#" className="text-green-400 hover:text-green-300 underline">
-                      términos y condiciones
-                    </a>{' '}
-                    y la{' '}
-                    <a href="#" className="text-green-400 hover:text-green-300 underline">
-                      política de privacidad
-                    </a>
-                  </label>
-                  {errors.terms && (
-                    <p className="mt-1 text-sm text-red-400">{errors.terms.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Botón de Submit */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-500/50 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creando cuenta...
-                </>
-              ) : (
-                <>
-                  Crear mi cuenta
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Link a Login */}
-          <div className="mt-6 text-center">
-            <p className="text-slate-400">
-              ¿Ya tienes una cuenta?{' '}
-              <Link to="/login" className="text-green-400 hover:text-green-300 font-medium">
-                Inicia sesión aquí
-              </Link>
-            </p>
+            ))}
           </div>
+        </div>
+
+        {/* Mis Rutas con descarga */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">Mis rutas de preparación</h2>
+            <button className="text-green-400 hover:text-green-300 text-sm flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-green-500 rounded">
+              Ver todas
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {learningPaths.map((path) => (
+              <div 
+                key={path.id} 
+                className="bg-slate-900 border border-slate-700 rounded-lg p-4 hover:border-green-500/50 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-green-500"
+                tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <img 
+                    src={path.avatar} 
+                    alt={`Instructor de ${path.title}`}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm group-hover:text-green-400 group-focus:text-green-400 transition-colors">
+                      {path.title}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      {path.courses} cursos • {path.type}
+                    </p>
+                  </div>
+                  
+                  {/* Download button */}
+                  {path.downloadable && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadLearningPath(path.id);
+                      }}
+                      className="p-2 text-slate-400 hover:text-green-400 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded"
+                      title="Descargar ruta para acceso offline"
+                      aria-label={`Descargar ruta ${path.title} para acceso offline`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Subjects tags */}
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {path.subjects.map((subject, idx) => (
+                    <span key={idx} className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
+                      {subject}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mb-3">
+                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                    <span>{path.progress.toFixed(0)} de {path.totalHours} horas</span>
+                    <span>{Math.round((path.progress / path.totalHours) * 100)}%</span>
+                  </div>
+                  <div 
+                    className="w-full bg-slate-700 rounded-full h-2"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow={Math.round((path.progress / path.totalHours) * 100)}
+                    aria-label={`Progreso de ${path.title}: ${Math.round((path.progress / path.totalHours) * 100)}%`}
+                  >
+                    <div 
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${(path.progress / path.totalHours) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-6">Explora materias universitarias</h2>
+          
+          <div className="flex flex-wrap gap-3 mb-8">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  activeCategory === category.id
+                    ? 'bg-green-500 text-white'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                }`}
+                tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
+              >
+                {category.name} ({category.count})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Cursos recomendados */}
+        <div className="mb-12">
+          <h2 className="text-xl font-bold mb-6">Cursos para tu preparación universitaria</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {recommendedCourses.map((course) => (
+              <div 
+                key={course.id} 
+                className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg"
+                tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
+                role="button"
+                aria-label={`Curso: ${course.title}, instructor: ${course.instructor}, calificación: ${course.rating} estrellas`}
+              >
+                <div className="relative">
+                  <img 
+                    src={course.thumbnail} 
+                    alt={`Curso de ${course.category}: ${course.title}`}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Category badge */}
+                  <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    {course.category}
+                  </div>
+
+                  {/* Level badge */}
+                  <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded">
+                    {course.level}
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-green-400 group-focus:text-green-400 transition-colors mb-2">
+                    {course.title}
+                  </h3>
+                  
+                  <p className="text-xs text-slate-400 mb-1">
+                    Por {course.instructor}
+                  </p>
+
+                  <p className="text-xs text-blue-400 mb-2">
+                    {course.university}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="text-xs font-medium">{course.rating}</span>
+                    </div>
+                    <span className="text-xs text-slate-400">{course.duration}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sección de inclusión educativa */}
+        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-8 text-center">
+          <h3 className="text-xl font-bold mb-4">
+            🌟 Educación Inclusiva y Accesible
+          </h3>
+          <p className="text-slate-300 mb-6 leading-relaxed">
+            Todos nuestros cursos incluyen subtítulos, descripción de audio, lengua de señas mexicana, 
+            navegación por teclado y compatibilidad con lectores de pantalla. 
+            <strong> La educación es un derecho universal.</strong>
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span>👁️</span>
+              <span>Accesibilidad Visual</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>👂</span>
+              <span>Accesibilidad Auditiva</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>⌨️</span>
+              <span>Accesibilidad Motora</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>🧠</span>
+              <span>Accesibilidad Cognitiva</span>
+            </div>
+          </div>
+
+          <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500">
+            Conoce más sobre nuestras características de accesibilidad
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-export default Register;
+export default Resources;
