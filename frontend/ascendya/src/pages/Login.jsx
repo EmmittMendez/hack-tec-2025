@@ -36,9 +36,7 @@ function Login() {
       setLoading(true);
       // Simular llamada a API
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Simular validación de usuario (aquí harías la llamada real a tu API)
       if (data.emailOrUsername && data.password) {
-        // Simular usuario logueado
         const user = {
           id: Date.now(),
           username: data.emailOrUsername.includes("@")
@@ -54,11 +52,10 @@ function Login() {
           createdAt: new Date().toISOString(),
         };
         setUser(user);
-        navigate("/dashboard"); // Redirigir al dashboard después del login
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
-      // Aquí podrías mostrar un mensaje de error al usuario
     } finally {
       setLoading(false);
     }
@@ -258,7 +255,7 @@ function Login() {
             </div>
           </div>
 
-          {/* Login con Google (opcional) */}
+          {/* Login con Google */}
           <button
             type="button"
             className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-3"
