@@ -331,44 +331,10 @@ function Dashboard() {
     };
   };
 
-  // Rutas estáticas para cuando no hay rutas de Gemini
-  const staticRoutes = [
-    {
-      id: "static-1",
-      title: "Preparación EXANI-II",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=48&h=48&fit=crop&crop=face",
-      progress: 67,
-      completedModules: 16,
-      totalModules: 24,
-      weeklyTime: 8,
-      streak: 12,
-      avgScore: 85,
-      isFromGemini: false,
-    },
-    {
-      id: "static-2",
-      title: "Matemáticas Universitarias",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48&h=48&fit=crop&crop=face",
-      progress: 34,
-      completedModules: 8,
-      totalModules: 17,
-      weeklyTime: 12,
-      streak: 7,
-      avgScore: 92,
-      isFromGemini: false,
-    },
-  ];
-
-  // Combinar rutas de Gemini con rutas estáticas
-  const geminiRoutes = learningPaths.map((path, index) =>
+  // Usar solo las rutas de Gemini (generadas por IA)
+  const routesData = learningPaths.map((path, index) =>
     convertToRouteData(path, index)
   );
-  const routesData =
-    learningPaths.length > 0
-      ? [...geminiRoutes, ...staticRoutes]
-      : staticRoutes;
 
   // Datos para gráficas
   const circularData = routesData.map((route) => ({
@@ -538,7 +504,7 @@ function Dashboard() {
         {activeTab === "routes" && (
           <div className="space-y-8">
             {/* Estadísticas de rutas de Gemini */}
-            {geminiRoutes.length > 0 && (
+            {routesData.length > 0 && (
               <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border border-purple-500/30 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -557,7 +523,7 @@ function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-slate-900/50 rounded-lg p-4">
                     <div className="text-2xl font-bold text-purple-400">
-                      {geminiRoutes.length}
+                      {routesData.length}
                     </div>
                     <div className="text-sm text-slate-300">
                       Rutas IA Creadas
@@ -566,10 +532,10 @@ function Dashboard() {
                   <div className="bg-slate-900/50 rounded-lg p-4">
                     <div className="text-2xl font-bold text-blue-400">
                       {Math.round(
-                        geminiRoutes.reduce(
+                        routesData.reduce(
                           (sum, route) => sum + route.progress,
                           0
-                        ) / geminiRoutes.length
+                        ) / routesData.length
                       ) || 0}
                       %
                     </div>
@@ -579,7 +545,7 @@ function Dashboard() {
                   </div>
                   <div className="bg-slate-900/50 rounded-lg p-4">
                     <div className="text-2xl font-bold text-green-400">
-                      {geminiRoutes.reduce(
+                      {routesData.reduce(
                         (sum, route) => sum + route.completedModules,
                         0
                       )}
@@ -620,9 +586,9 @@ function Dashboard() {
               <div>
                 <h2 className="text-xl font-bold mb-4 text-white">
                   Selecciona una ruta para ver detalles
-                  {geminiRoutes.length > 0 && (
+                  {routesData.length > 0 && (
                     <span className="text-sm font-normal text-purple-400 ml-2">
-                      ({geminiRoutes.length} personalizadas con IA)
+                      ({routesData.length} personalizadas con IA)
                     </span>
                   )}
                 </h2>

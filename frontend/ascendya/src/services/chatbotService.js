@@ -102,7 +102,6 @@ const readFileAsText = (file) => {
     ) {
       reader.readAsText(file);
     } else if (file.type === "application/pdf") {
-      // Para PDFs necesitaríamos una librería adicional
       resolve(
         "Archivo PDF detectado. Por favor, convierte el contenido a texto para un mejor análisis."
       );
@@ -128,15 +127,23 @@ export const startVoiceRecognition = (onResult, onError, onStart = null) => {
     window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = new SpeechRecognition();
 
-  // Configuración mejorada
+  // Configuración mejorada para evitar problemas de red
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.lang = "es-ES";
   recognition.maxAlternatives = 1;
 
-  // Configuraciones adicionales para mejorar la estabilidad
-  if ("webkitSpeechRecognition" in window) {
-    recognition.serviceURI = null; // Forzar uso local si es posible
+  // Intentar configurar para uso offline/local
+  try {
+    if ("webkitSpeechRecognition" in window) {
+      // Configuraciones específicas para Chrome/Edge
+      recognition.serviceURI = ""; // Vacío para forzar local
+      recognition.grammars = null; // Sin gramáticas específicas
+    }
+  } catch (e) {
+    console.log(
+      "No se pudo configurar para uso local, usando configuración estándar"
+    );
   }
 
   recognition.onstart = () => {
@@ -164,15 +171,23 @@ export const startVoiceRecognition = (onResult, onError, onStart = null) => {
     switch (event.error) {
       case "network":
         errorMessage =
-          "Error de conexión. Verifica tu conexión a internet y vuelve a intentar.";
+          "🌐 Problema de conexión detectado. El reconocimiento de voz requiere internet estable. Mientras tanto, puedes escribir tu mensaje en el chat.";
+        // Sugerir reintentar después de un momento
+        setTimeout(() => {
+          onError(
+            "💡 Consejo: Verifica tu conexión WiFi o datos móviles y vuelve a intentar el reconocimiento de voz."
+          );
+        }, 3000);
         break;
       case "not-allowed":
         errorMessage =
-          "Permiso de micrófono denegado. Por favor, permite el acceso al micrófono en tu navegador.";
+          "🎤 Permiso de micrófono denegado. Ve a la configuración de tu navegador → Privacidad → Micrófono y permite el acceso para este sitio.";
         break;
       case "no-speech":
         errorMessage =
-          "No se detectó ningún audio. Asegúrate de hablar cerca del micrófono.";
+          "🔇 No se detectó ningún audio. Asegúrate de hablar cerca del micrófono y que no haya ruido de fondo.";
+        break;
+        "No se detectó ningún audio. Asegúrate de hablar cerca del micrófono.";
         break;
       case "audio-capture":
         errorMessage =
@@ -232,6 +247,72 @@ export const startVoiceRecognition = (onResult, onError, onStart = null) => {
   };
 
   return recognition;
+};
+
+// Función de reintentos para reconocimiento de voz
+export const startVoiceRecognitionWithRetry = (
+  onResult,
+  onError,
+  onStart = null,
+  maxRetries = 2
+) => {
+  let retryCount = 0;
+
+  const attemptRecognition = () => {
+    const recognition = startVoiceRecognition(
+      onResult,
+      (error) => {
+        // Si es un error de red y aún tenemos reintentos
+        if (error.includes("conexión") && retryCount < maxRetries) {
+          retryCount++;
+          onError(
+            `🔄 Reintentando reconocimiento de voz... (${retryCount}/${maxRetries})`
+          );
+          setTimeout(() => {
+            attemptRecognition();
+          }, 2000);
+        } else {
+          // Si no es error de red o ya no hay más reintentos
+          onError(error);
+        }
+      },
+      onStart
+    );
+
+    return recognition;
+  };
+
+  return attemptRecognition();
+};
+
+// Función alternativa para entrada de voz con fallback manual
+export const createVoiceInputFallback = (onResult) => {
+  return {
+    startManualInput: () => {
+      const transcript = prompt(
+        "🎤 Como el reconocimiento automático falló, puedes escribir aquí lo que querías decir por voz:"
+      );
+      if (transcript && transcript.trim()) {
+        onResult(transcript.trim());
+        return true;
+      }
+      return false;
+    },
+
+    showVoiceInstructions: () => {
+      return `
+🎙️ **Guía para Solucionar Problemas de Voz:**
+
+1. **Verifica tu conexión a internet** - El reconocimiento necesita conexión estable
+2. **Permite permisos de micrófono** - Busca el ícono 🎤 en la barra de direcciones
+3. **Usa Chrome o Edge** - Mejor compatibilidad con reconocimiento de voz
+4. **Habla claramente** - A unos 15cm del micrófono
+5. **Evita ruido de fondo** - Busca un lugar silencioso
+
+💡 **Alternativa:** Puedes escribir tu mensaje directamente en el chat.
+      `;
+    },
+  };
 };
 
 // Función para verificar permisos y disponibilidad del micrófono

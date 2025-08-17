@@ -43,44 +43,10 @@ function Resources() {
     };
   };
 
-  // Rutas estáticas (ejemplos predefinidos)
-  const staticLearningPaths = [
-    {
-      id: 1,
-      title: "Preparación EXANI-II (Ingeniería)",
-      courses: 24,
-      progress: 67,
-      totalHours: 120,
-      type: "Ruta Especializada",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      downloadable: true,
-      subjects: ["Matemáticas", "Física", "Química"],
-      isFromGemini: false,
-    },
-    {
-      id: 2,
-      title: "Examen de Admisión UNAM (Área 1)",
-      courses: 18,
-      progress: 12,
-      totalHours: 85,
-      type: "Ruta Oficial",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-      downloadable: true,
-      subjects: ["Matemáticas", "Física", "Química", "Biología"],
-      isFromGemini: false,
-    },
-  ];
-
-  // Combinar rutas: convertir las de Gemini y agregar las estáticas
-  const geminiPaths = storedPaths.map((path, index) =>
+  // Usar solo las rutas de Gemini (generadas por IA)
+  const learningPaths = storedPaths.map((path, index) =>
     convertGeminiPath(path, index)
   );
-  const allLearningPaths = [...geminiPaths, ...staticLearningPaths];
-
-  // Usar todas las rutas combinadas
-  const learningPaths = allLearningPaths;
   const currentVideos = [
     {
       id: 1,

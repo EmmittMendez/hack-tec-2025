@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import {
   getChatbotResponse,
   startVoiceRecognition,
+  startVoiceRecognitionWithRetry,
+  createVoiceInputFallback,
   speakText,
   checkMicrophonePermissions,
   checkNetworkConnectivity,
@@ -24,6 +26,7 @@ const VirtualAssistant = () => {
   const [attachedFile, setAttachedFile] = useState(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("unknown"); // "good", "poor", "offline", "unknown"
+  const [voiceFailureCount, setVoiceFailureCount] = useState(0); // Contador de fallos de voz
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -165,10 +168,10 @@ const VirtualAssistant = () => {
       return;
     }
 
-    // Iniciar grabación
+    // Iniciar grabación con reintentos automáticos
     setIsRecording(true);
 
-    recognitionRef.current = startVoiceRecognition(
+    recognitionRef.current = startVoiceRecognitionWithRetry(
       (transcript) => {
         setInputMessage(transcript);
         setIsRecording(false);
@@ -185,16 +188,40 @@ const VirtualAssistant = () => {
       (error) => {
         console.error("Error de voz:", error);
         setIsRecording(false);
+        setVoiceFailureCount((prev) => prev + 1); // Incrementar contador de fallos
 
-        // Mostrar error como mensaje en el chat en lugar de alert
-        const errorMessage = {
-          id: Date.now(),
-          role: "assistant",
-          content: `🚫 ${error}`,
-          timestamp: new Date().toISOString(),
-          isError: true,
-        };
-        setMessages((prev) => [...prev, errorMessage]);
+        // Si es un error de red persistente, ofrecer alternativas
+        if (error.includes("conexión") || error.includes("network")) {
+          const fallback = createVoiceInputFallback((transcript) => {
+            setInputMessage(transcript);
+            const successMessage = {
+              id: Date.now(),
+              role: "assistant",
+              content: `✅ Mensaje recibido: "${transcript}"`,
+              timestamp: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, successMessage]);
+          });
+
+          const errorMessage = {
+            id: Date.now(),
+            role: "assistant",
+            content: `🚫 ${error}\n\n${fallback.showVoiceInstructions()}\n\n💡 **Opción Rápida:** Usa el botón ✍️ para entrada manual.`,
+            timestamp: new Date().toISOString(),
+            isError: true,
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+        } else {
+          // Otros errores
+          const errorMessage = {
+            id: Date.now(),
+            role: "assistant",
+            content: `🚫 ${error}`,
+            timestamp: new Date().toISOString(),
+            isError: true,
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+        }
       },
       () => {
         // Callback cuando inicia la grabación
@@ -205,7 +232,8 @@ const VirtualAssistant = () => {
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, startMessage]);
-      }
+      },
+      2 // Máximo 2 reintentos
     );
 
     if (recognitionRef.current) {
@@ -225,6 +253,27 @@ const VirtualAssistant = () => {
         };
         setMessages((prev) => [...prev, errorMessage]);
       }
+    }
+  };
+
+  // Función de emergencia para entrada manual de voz
+  const handleManualVoiceInput = () => {
+    const transcript = prompt(
+      "🎤 Entrada Manual de Voz:\n\nEscribe aquí lo que querías decir por voz:"
+    );
+    if (transcript && transcript.trim()) {
+      setInputMessage(transcript.trim());
+
+      const confirmMessage = {
+        id: Date.now(),
+        role: "assistant",
+        content: `✍️ Mensaje recibido manualmente: "${transcript.trim()}"`,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, confirmMessage]);
+
+      // Resetear contador de fallos
+      setVoiceFailureCount(0);
     }
   };
 
@@ -572,6 +621,18 @@ const VirtualAssistant = () => {
               >
                 <span className="text-lg">📎</span>
               </button>
+
+              {/* Manual voice input - mostrar solo después de fallos */}
+              {voiceFailureCount >= 2 && (
+                <button
+                  onClick={handleManualVoiceInput}
+                  className="p-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                  disabled={isLoading}
+                  title="Entrada manual de voz (cuando falla el reconocimiento automático)"
+                >
+                  <span className="text-lg">✍️</span>
+                </button>
+              )}
 
               {/* Send button */}
               <button
