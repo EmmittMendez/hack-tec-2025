@@ -2,185 +2,93 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import {v4 as uuidv4} from 'uuid'
 import * as yup from 'yup';
 import userStore from '../store/userStore';
 
-// Esquema de validación con Yup
 const schema = yup.object({
-  username: yup
-    .string()
-    .required('El nombre de usuario es obligatorio')
-    .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
-    .max(20, 'El nombre de usuario no puede exceder 20 caracteres')
-    .matches(/^[a-zA-Z0-9_]+$/, 'Solo se permiten letras, números y guiones bajos'),
-  
   firstName: yup
     .string()
-    .required('El nombre es obligatorio')
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(50, 'El nombre no puede exceder 50 caracteres'),
-  
+    .required('El nombre es requerido'),
   lastName: yup
     .string()
-    .required('Los apellidos son obligatorios')
-    .min(2, 'Los apellidos deben tener al menos 2 caracteres')
-    .max(50, 'Los apellidos no pueden exceder 50 caracteres'),
-  
+    .required('Los apellidos son requeridos'),
   email: yup
     .string()
-    .required('El email es obligatorio')
-    .email('Debe ser un email válido'),
-  
+    .email('Ingresa un email válido')
+    .required('El email es requerido'),
   password: yup
     .string()
-    .required('La contraseña es obligatoria')
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'La contraseña debe contener al menos una mayúscula, una minúscula y un número'
-    ),
-  
+    .min(6, 'La contraseña debe tener al menos 6 caracteres')
+    .required('La contraseña es requerida'),
   confirmPassword: yup
     .string()
+    .oneOf([yup.ref('password')], 'Las contraseñas no coinciden')
     .required('Confirma tu contraseña')
-    .oneOf([yup.ref('password')], 'Las contraseñas no coinciden'),
-  
-  state: yup
-    .string()
-    .required('Selecciona tu estado'),
-  
-  educationLevel: yup
-    .string()
-    .required('Selecciona tu último grado de estudios')
 });
 
 function Register() {
   const navigate = useNavigate();
-  const { setUser, setLoading } = userStore();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { register: registerUser, isLoading } = userStore(); // ← Cambiar a registerUser
+  const [registerError, setRegisterError] = useState('');
 
   const {
-    register,
+    register, // ← Este es de react-hook-form
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm({
     resolver: yupResolver(schema)
   });
 
-  const states = [
-    'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',
-    'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima',
-    'Durango', 'Estado de México', 'Guanajuato', 'Guerrero', 'Hidalgo',
-    'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca',
-    'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa',
-    'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas'
-  ];
-
-  const educationLevels = [
-    'Primaria',
-    'Secundaria',
-    'Preparatoria / Bachillerato',
-    'Técnico Superior',
-    'Licenciatura',
-    'Maestría',
-    'Doctorado'
-  ];
-
   const onSubmit = async (data) => {
     try {
-      setLoading(true);
-      
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simular usuario registrado
-      const newUser = {
-        id: uuidv4(),
-        username: data.username,
+      setRegisterError('');
+      await registerUser({ // ← Usar registerUser aquí
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        state: data.state,
-        educationLevel: data.educationLevel,
-        createdAt: new Date().toISOString()
-      };
+        username: data.email.split('@')[0],
+        location: 'México',
+        state: 'Puebla',
+        country: 'México'
+      });
       
-      setUser(newUser);
-      navigate('/quiz'); // Redirigir al quiz después del registro
-      
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Error al registrar:', error);
-    } finally {
-      setLoading(false);
+      setRegisterError(error.message || 'Error al crear la cuenta');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 py-12 px-4">
-      <div className="max-w-md mx-auto">
-        
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-6">
-            <div className="bg-gradient-to-r from-green-400 to-blue-500 p-2 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <span className="text-2xl font-bold text-white">Ascendia</span>
-          </div>
-          
-          <h1 className="text-3xl font-bold text-white mb-2">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
             Crea tu cuenta
-          </h1>
-          <p className="text-slate-400 mb-6">
-            Únete a nuestra comunidad educativa
+          </h2>
+          <p className="mt-2 text-center text-sm text-slate-400">
+            O{' '}
+            <Link
+              to="/login"
+              className="font-medium text-green-400 hover:text-green-300 transition-colors"
+            >
+              inicia sesión si ya tienes cuenta
+            </Link>
           </p>
-          
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 text-sm font-medium">
-            🎉 ¡Es completamente gratis!
-          </div>
         </div>
 
-        {/* Formulario */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            
-            {/* Nombre de Usuario */}
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-4">
+            {/* First Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Nombre de usuario *
+              <label htmlFor="firstName" className="block text-sm font-medium text-slate-300 mb-2">
+                Nombre
               </label>
               <input
-                type="text"
-                {...register('username')}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.username 
-                    ? 'border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                }`}
-                placeholder="mi_usuario123"
-              />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
-              )}
-            </div>
-
-            {/* Nombre */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Nombre *
-              </label>
-              <input
-                type="text"
                 {...register('firstName')}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.firstName 
-                    ? 'border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
+                type="text"
+                autoComplete="given-name"
+                className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                  errors.firstName ? 'border-red-500' : 'border-slate-600'
                 }`}
                 placeholder="Tu nombre"
               />
@@ -189,18 +97,17 @@ function Register() {
               )}
             </div>
 
-            {/* Apellidos */}
+            {/* Last Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Apellidos *
+              <label htmlFor="lastName" className="block text-sm font-medium text-slate-300 mb-2">
+                Apellidos
               </label>
               <input
-                type="text"
                 {...register('lastName')}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.lastName 
-                    ? 'border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
+                type="text"
+                autoComplete="family-name"
+                className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                  errors.lastName ? 'border-red-500' : 'border-slate-600'
                 }`}
                 placeholder="Tus apellidos"
               />
@@ -211,16 +118,15 @@ function Register() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Correo electrónico *
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                Email
               </label>
               <input
-                type="email"
                 {...register('email')}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.email 
-                    ? 'border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
+                type="email"
+                autoComplete="email"
+                className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                  errors.email ? 'border-red-500' : 'border-slate-600'
                 }`}
                 placeholder="tu@email.com"
               />
@@ -229,157 +135,82 @@ function Register() {
               )}
             </div>
 
-            {/* Contraseña */}
+            {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Contraseña *
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+                Contraseña
               </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
-                  className={`w-full px-4 py-3 pr-12 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.password 
-                      ? 'border-red-500 focus:ring-red-500/50' 
-                      : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {showPassword ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    )}
-                  </svg>
-                </button>
-              </div>
+              <input
+                {...register('password')}
+                type="password"
+                autoComplete="new-password"
+                className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                  errors.password ? 'border-red-500' : 'border-slate-600'
+                }`}
+                placeholder="••••••••"
+              />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
               )}
             </div>
 
-            {/* Confirmar Contraseña */}
+            {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Confirmar contraseña *
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
+                Confirmar contraseña
               </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  {...register('confirmPassword')}
-                  className={`w-full px-4 py-3 pr-12 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.confirmPassword 
-                      ? 'border-red-500 focus:ring-red-500/50' 
-                      : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {showConfirmPassword ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    )}
-                  </svg>
-                </button>
-              </div>
+              <input
+                {...register('confirmPassword')}
+                type="password"
+                autoComplete="new-password"
+                className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                  errors.confirmPassword ? 'border-red-500' : 'border-slate-600'
+                }`}
+                placeholder="••••••••"
+              />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-400">{errors.confirmPassword.message}</p>
               )}
             </div>
+          </div>
 
-            {/* Estado */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Estado *
-              </label>
-              <select
-                {...register('state')}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white focus:outline-none focus:ring-2 transition-colors ${
-                  errors.state 
-                    ? 'border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                }`}
-              >
-                <option value="">Selecciona tu estado</option>
-                {states.map(state => (
-                  <option key={state} value={state}>{state}</option>
-                ))}
-              </select>
-              {errors.state && (
-                <p className="mt-1 text-sm text-red-400">{errors.state.message}</p>
-              )}
+          {/* Error de registro */}
+          {registerError && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg">
+              {registerError}
             </div>
+          )}
 
-            {/* Último grado de estudios */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Último grado de estudios *
-              </label>
-              <select
-                {...register('educationLevel')}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white focus:outline-none focus:ring-2 transition-colors ${
-                  errors.educationLevel 
-                    ? 'border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-600 focus:border-green-500 focus:ring-green-500/50'
-                }`}
-              >
-                <option value="">Selecciona tu nivel de estudios</option>
-                {educationLevels.map(level => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-              {errors.educationLevel && (
-                <p className="mt-1 text-sm text-red-400">{errors.educationLevel.message}</p>
-              )}
-            </div>
-
-            {/* Botón de Submit */}
+          {/* Submit button */}
+          <div>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-500/50 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 mt-6"
+              disabled={isLoading}
+              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-colors ${
+                isLoading
+                  ? 'bg-slate-700 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+              }`}
             >
-              {isSubmitting ? (
-                <>
-                  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mr-2"></div>
                   Creando cuenta...
-                </>
+                </div>
               ) : (
-                <>
-                  Crear mi cuenta
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </>
+                'Crear cuenta'
               )}
             </button>
-          </form>
-
-          {/* Link a Login */}
-          <div className="mt-6 text-center">
-            <p className="text-slate-400">
-              ¿Ya tienes una cuenta?{' '}
-              <Link to="/login" className="text-green-400 hover:text-green-300 font-medium">
-                Inicia sesión aquí
-              </Link>
-            </p>
           </div>
-        </div>
+
+          {/* Demo info */}
+          <div className="bg-blue-500/10 border border-blue-500/30 text-blue-400 px-4 py-3 rounded-lg text-sm">
+            <p className="font-medium mb-1">Registro de prueba:</p>
+            <p>✅ Completa todos los campos</p>
+            <p>✅ Usa cualquier email válido</p>
+            <p>✅ Contraseña de 6+ caracteres</p>
+          </div>
+        </form>
       </div>
     </div>
   );
