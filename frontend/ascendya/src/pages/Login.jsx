@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import useUserStore from "../store/userStore";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import userStore from '../store/userStore';
 
 // Esquema de validación con Yup
 const schema = yup.object({
@@ -20,7 +20,7 @@ const schema = yup.object({
 
 function Login() {
   const navigate = useNavigate();
-  const { setUser, setLoading } = useUserStore();
+  const { setUser, setLoading } = userStore();
   const [showPassword, setShowPassword] = useState(false);
 
   const {

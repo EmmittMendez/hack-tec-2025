@@ -10,11 +10,10 @@ function Navbar() {
 
   const navLinks = [
     { name: 'Inicio', path: '/' },
-    ...(isAuthenticated ? [
-      { name: 'Dashboard', path: '/dashboard' },
-      { name: 'Quiz', path: '/quiz' },
-      { name: 'Perfil', path: '/profile' },
-    ] : [])
+    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Quiz', path: '/quiz' },
+    { name: 'Perfil', path: '/profile' },
+    { name: 'Ruta de Aprendizaje', path: '/resources' }
   ];
 
   const isActive = (path) => location.pathname === path;

@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Quiz from "./pages/Quiz";
 import Navbar from "./components/layout/Navbar";
+import Resources from "./pages/Resources";
 
 function App() {
   const { checkAuth } = useStore();
@@ -27,6 +28,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/quiz" element={<Quiz />} />
+        <Route path="/resources" element={<Resources />} />
       </Routes>
     </Router>
   );
