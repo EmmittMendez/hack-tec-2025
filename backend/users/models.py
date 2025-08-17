@@ -1,57 +1,31 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 
 class User(AbstractUser):
     """
-    Modelo de usuario personalizado que extiende AbstractUser
+    Modelo personalizado de usuario extendiendo AbstractUser
     """
-    # Estados de México
-    ESTADOS_CHOICES = [
-        ('aguascalientes', 'Aguascalientes'),
-        ('baja_california', 'Baja California'),
-        ('baja_california_sur', 'Baja California Sur'),
-        ('campeche', 'Campeche'),
-        ('coahuila', 'Coahuila'),
-        ('colima', 'Colima'),
-        ('chiapas', 'Chiapas'),
-        ('chihuahua', 'Chihuahua'),
-        ('cdmx', 'Ciudad de México'),
-        ('durango', 'Durango'),
-        ('guanajuato', 'Guanajuato'),
-        ('guerrero', 'Guerrero'),
-        ('hidalgo', 'Hidalgo'),
-        ('jalisco', 'Jalisco'),
-        ('mexico', 'Estado de México'),
-        ('michoacan', 'Michoacán'),
-        ('morelos', 'Morelos'),
-        ('nayarit', 'Nayarit'),
-        ('nuevo_leon', 'Nuevo León'),
-        ('oaxaca', 'Oaxaca'),
-        ('puebla', 'Puebla'),
-        ('queretaro', 'Querétaro'),
-        ('quintana_roo', 'Quintana Roo'),
-        ('san_luis_potosi', 'San Luis Potosí'),
-        ('sinaloa', 'Sinaloa'),
-        ('sonora', 'Sonora'),
-        ('tabasco', 'Tabasco'),
-        ('tamaulipas', 'Tamaulipas'),
-        ('tlaxcala', 'Tlaxcala'),
-        ('veracruz', 'Veracruz'),
-        ('yucatan', 'Yucatán'),
-        ('zacatecas', 'Zacatecas'),
-    ]
-
     nombres = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
-    ultimo_grado_estudios = models.CharField(max_length=100)
-    estado = models.CharField(max_length=50, choices=ESTADOS_CHOICES, help_text="Estado de la República Mexicana")
-
-    # Los campos email, username y password ya están incluidos en AbstractUser
-    # AbstractUser ya incluye is_active, date_joined, etc.
-
-    def __str__(self):
-        return f"{self.nombres} {self.apellidos}"
-
+    ultimo_grado_estudios = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(unique=True)
+    estado = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Campos adicionales para mejor manejo
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'nombres', 'apellidos']
+    
     class Meta:
-        db_table = "users"
+        db_table = 'users'
+        verbose_name = 'Usuario'
+        verbose_name_plural = 'Usuarios'
+    
+    def __str__(self):
+        return f"{self.nombres} {self.apellidos} ({self.email})"
+    
+    def get_full_name(self):
+        return f"{self.nombres} {self.apellidos}"
