@@ -41,9 +41,8 @@ const ESTADOS_MEXICO = [
   { value: 'zacatecas', label: 'Zacatecas' },
 ];
 
-// Esquema de validación
+// Esquema de validación actualizado para Django backend
 const registerSchema = yup.object({
-  username: yup.string().required('Username es requerido'),
   email: yup.string().email('Email inválido').required('Email es requerido'),
   password: yup.string().min(8, 'Password debe tener al menos 8 caracteres').required('Password es requerido'),
   password_confirm: yup.string().oneOf([yup.ref('password'), null], 'Las contraseñas no coinciden'),
@@ -55,7 +54,7 @@ const registerSchema = yup.object({
 
 const RegisterForm = () => {
   const navigate = useNavigate();
-  const { registerUser, loading, error, clearError } = useUserStore();
+  const { register: registerUser, isLoading, error, clearError } = useUserStore();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -69,10 +68,13 @@ const RegisterForm = () => {
   const onSubmit = async (data) => {
     clearError();
     try {
+      // Enviar todos los datos al backend, incluyendo password_confirm
+      // El backend se encargará de validar y remover password_confirm
       await registerUser(data);
       navigate('/dashboard'); // Redirigir después del registro exitoso
     } catch (error) {
       console.error('Register error:', error);
+      // El error ya se maneja en el store
     }
   };
 
@@ -93,22 +95,6 @@ const RegisterForm = () => {
           )}
           
           <div className="space-y-4">
-            {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <input
-                {...register('username')}
-                type="text"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Tu username"
-              />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
-              )}
-            </div>
-
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -245,10 +231,10 @@ const RegisterForm = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+              {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
           </div>
 

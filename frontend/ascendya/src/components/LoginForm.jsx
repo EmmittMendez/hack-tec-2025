@@ -5,15 +5,15 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import useUserStore from '../store/userStore';
 
-// Esquema de validación
+// Esquema de validación actualizado para email
 const loginSchema = yup.object({
-  username: yup.string().required('Username es requerido'),
+  email: yup.string().email('Email inválido').required('Email es requerido'),
   password: yup.string().required('Password es requerido'),
 });
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { loginUser, loading, error, clearError } = useUserStore();
+  const { login, isLoading, error, clearError } = useUserStore();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -27,7 +27,7 @@ const LoginForm = () => {
   const onSubmit = async (data) => {
     clearError();
     try {
-      await loginUser(data.username, data.password);
+      await login(data.email, data.password);
       navigate('/dashboard'); // Redirigir después del login exitoso
     } catch (error) {
       // El error ya se maneja en el store
@@ -53,18 +53,18 @@ const LoginForm = () => {
           
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
               </label>
               <input
-                {...register('username')}
-                type="text"
-                autoComplete="username"
+                {...register('email')}
+                type="email"
+                autoComplete="email"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Tu username"
+                placeholder="tu@email.com"
               />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
               )}
             </div>
 
@@ -97,10 +97,10 @@ const LoginForm = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
           </div>
 
