@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { v4 as uuidv4 } from "uuid";
 import * as yup from "yup";
-import userStore from "../store/userStore";
+import useStore from "../store/useStore";
 
 // Esquema de validación con Yup
 const schema = yup.object({
@@ -58,7 +58,7 @@ const schema = yup.object({
 
 function Register() {
   const navigate = useNavigate();
-  const { registerUser } = userStore();
+  const { register: registerUser, loading, error } = useStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -105,6 +105,42 @@ function Register() {
     "Zacatecas",
   ];
 
+  // Mapeo de nombres completos a valores del backend
+  const stateMapping = {
+    "Aguascalientes": "aguascalientes",
+    "Baja California": "baja_california",
+    "Baja California Sur": "baja_california_sur",
+    "Campeche": "campeche",
+    "Chiapas": "chiapas",
+    "Chihuahua": "chihuahua",
+    "Ciudad de México": "cdmx",
+    "Coahuila": "coahuila",
+    "Colima": "colima",
+    "Durango": "durango",
+    "Estado de México": "mexico",
+    "Guanajuato": "guanajuato",
+    "Guerrero": "guerrero",
+    "Hidalgo": "hidalgo",
+    "Jalisco": "jalisco",
+    "Michoacán": "michoacan",
+    "Morelos": "morelos",
+    "Nayarit": "nayarit",
+    "Nuevo León": "nuevo_leon",
+    "Oaxaca": "oaxaca",
+    "Puebla": "puebla",
+    "Querétaro": "queretaro",
+    "Quintana Roo": "quintana_roo",
+    "San Luis Potosí": "san_luis_potosi",
+    "Sinaloa": "sinaloa",
+    "Sonora": "sonora",
+    "Tabasco": "tabasco",
+    "Tamaulipas": "tamaulipas",
+    "Tlaxcala": "tlaxcala",
+    "Veracruz": "veracruz",
+    "Yucatán": "yucatan",
+    "Zacatecas": "zacatecas",
+  };
+
   const educationLevels = [
     "Primaria",
     "Secundaria",
@@ -117,40 +153,26 @@ function Register() {
 
   const onSubmit = async (data) => {
     try {
-      setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Obtener usuarios existentes de localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      // Verificar si el email o username ya existe
-      const exists = users.some(
-        (u) => u.email === data.email || u.username === data.username
-      );
-      if (exists) {
-        alert("El usuario o email ya está registrado");
-        setLoading(false);
-        return;
-      }
-      // Crear nuevo usuario
-      const newUser = {
-        id: uuidv4(),
+      // Mapear los datos del formulario al formato del backend
+      const userData = {
         username: data.username,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        nombres: data.firstName,
+        apellidos: data.lastName,
         email: data.email,
         password: data.password,
-        state: data.state,
-        educationLevel: data.educationLevel,
+        password_confirm: data.confirmPassword,
+        estado: stateMapping[data.state], // Mapear el estado al valor del backend
+        ultimo_grado_estudios: data.educationLevel,
       };
-      // Guardar en localStorage
-      localStorage.setItem("users", JSON.stringify([...users, newUser]));
-      registerUser(newUser);
-      console.log(newUser);
+
+      await registerUser(userData);
+      
+      // Si llegamos aquí, el registro fue exitoso
+      console.log("Usuario registrado exitosamente");
       navigate("/quiz");
     } catch (error) {
       console.error("Error al registrar:", error);
-    } finally {
-      setLoading(false);
-      console.log("hola");
+      // El error ya se maneja en el store
     }
   };
 
@@ -190,6 +212,13 @@ function Register() {
 
         {/* Formulario */}
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
+          {/* Error del store */}
+          {error && (
+            <div className="mb-5 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Nombre de Usuario */}
             <div>
@@ -440,10 +469,10 @@ function Register() {
             {/* Botón de Submit */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={loading}
               className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-500/50 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 mt-6"
             >
-              {isSubmitting ? (
+              {loading ? (
                 <>
                   <svg
                     className="animate-spin w-5 h-5"

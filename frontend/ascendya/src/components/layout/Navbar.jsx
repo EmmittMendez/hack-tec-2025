@@ -1,18 +1,29 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import useStore from '../../store/useStore';
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useStore();
 
   const navLinks = [
     { name: 'Inicio', path: '/' },
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Quiz', path: '/quiz' },
-    { name: 'Perfil', path: '/profile' },
+    ...(isAuthenticated ? [
+      { name: 'Dashboard', path: '/dashboard' },
+      { name: 'Quiz', path: '/quiz' },
+      { name: 'Perfil', path: '/profile' },
+    ] : [])
   ];
 
   const isActive = (path) => location.pathname === path;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50 backdrop-blur-sm bg-slate-900/95">
@@ -51,18 +62,34 @@ function Navbar() {
 
           {/* Auth Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              to="/login"
-              className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
-            <Link
-              to="/register"
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Registrarse
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <span className="text-slate-300 text-sm">
+                  Hola, {user?.first_name || user?.username}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Iniciar Sesión
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -103,20 +130,36 @@ function Navbar() {
               
               {/* Auth buttons mobile */}
               <div className="pt-4 pb-2 border-t border-slate-700 space-y-2">
-                <Link
-                  to="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-                >
-                  Iniciar Sesión
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium bg-green-500 hover:bg-green-600 text-white transition-colors"
-                >
-                  Registrarse
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-3 py-2 text-slate-300 text-sm">
+                      Hola, {user?.first_name || user?.username}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      Cerrar Sesión
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      Iniciar Sesión
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block px-3 py-2 rounded-md text-base font-medium bg-green-500 hover:bg-green-600 text-white transition-colors"
+                    >
+                      Registrarse
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

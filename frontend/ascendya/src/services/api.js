@@ -86,7 +86,8 @@ export const authService = {
       return data;
     } else {
       const error = await response.json();
-      throw new Error(error.detail || 'Error en registro');
+      console.error('Register error response:', error);
+      throw new Error(error.detail || error.message || JSON.stringify(error) || 'Error en registro');
     }
   },
 
