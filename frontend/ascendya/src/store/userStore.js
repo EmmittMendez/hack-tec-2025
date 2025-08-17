@@ -93,6 +93,9 @@ const useUserStore = create((set, get) => ({
   loginUser: async (username, password) => {
     set({ loading: true, error: null });
     
+    console.log('Intentando login con:', { username, password: '***' });
+    console.log('URL del API:', `${API_BASE_URL}/users/auth/login/`);
+    
     try {
       const response = await fetch(`${API_BASE_URL}/users/auth/login/`, {
         method: 'POST',
@@ -102,7 +105,9 @@ const useUserStore = create((set, get) => ({
         body: JSON.stringify({ username, password }),
       });
 
+      console.log('Respuesta del servidor:', response.status, response.statusText);
       const data = await response.json();
+      console.log('Datos de respuesta:', data);
 
       if (response.ok) {
         // Guardar tokens
