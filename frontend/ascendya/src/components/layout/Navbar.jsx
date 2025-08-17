@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import userStore from '../../store/userStore'; // ← Cambiar esta ruta (dos niveles arriba)
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import userStore from "../../store/userStore"; // ← Cambiar esta ruta (dos niveles arriba)
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,23 +12,23 @@ function Navbar() {
   const handleLogout = () => {
     logout();
     setIsProfileMenuOpen(false);
-    navigate('/');
+    navigate("/");
   };
 
   // Links para usuarios no autenticados
   const publicNavItems = [
-    { name: 'Inicio', path: '/' },
-    { name: 'Recursos', path: '/resources' },
-    { name: 'Universidades', path: '/university' },
-    { name: 'Quiz', path: '/quiz' }
+    { name: "Inicio", path: "/" },
+    { name: "Recursos", path: "/resources" },
+    { name: "Universidades", path: "/university" },
+    { name: "Quiz", path: "/quiz" },
   ];
 
   // Links para usuarios autenticados
   const authNavItems = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Recursos', path: '/resources' },
-    { name: 'Universidades', path: '/university' },
-    { name: 'Quiz', path: '/quiz' }
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Recursos", path: "/resources" },
+    { name: "Universidades", path: "/university" },
+    { name: "Quiz", path: "/quiz" },
   ];
 
   const navItems = isAuthenticated ? authNavItems : publicNavItems;
@@ -41,11 +41,12 @@ function Navbar() {
     <nav className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          
           {/* Logo y links principales */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-green-400">Ascendia</span>
+              <span className="text-2xl font-bold text-green-400">
+                Ascendya
+              </span>
             </Link>
 
             {/* Desktop navigation */}
@@ -56,8 +57,8 @@ function Navbar() {
                   to={item.path}
                   className={`px-3 py-2 text-sm font-medium transition-colors ${
                     isActiveLink(item.path)
-                      ? 'text-green-400 border-b-2 border-green-400'
-                      : 'text-slate-300 hover:text-white'
+                      ? "text-green-400 border-b-2 border-green-400"
+                      : "text-slate-300 hover:text-white"
                   }`}
                 >
                   {item.name}
@@ -68,7 +69,6 @@ function Navbar() {
 
           {/* Right side - Auth buttons o Profile */}
           <div className="flex items-center space-x-4">
-            
             {!isAuthenticated ? (
               // Botones de Login/Register cuando NO está autenticado
               <>
@@ -93,20 +93,30 @@ function Navbar() {
                   className="flex items-center space-x-3 text-slate-300 hover:text-white transition-colors"
                 >
                   <img
-                    src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'}
-                    alt={user?.firstName || 'Usuario'}
+                    src={
+                      user?.avatar ||
+                      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
+                    }
+                    alt={user?.firstName || "Usuario"}
                     className="w-8 h-8 rounded-full border-2 border-slate-600"
                   />
                   <span className="hidden md:block text-sm font-medium">
-                    {user?.firstName || 'Perfil'}
+                    {user?.firstName || "Perfil"}
                   </span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform ${
+                      isProfileMenuOpen ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
 
@@ -117,11 +127,9 @@ function Navbar() {
                       <p className="text-sm font-medium text-white">
                         {user?.firstName} {user?.lastName}
                       </p>
-                      <p className="text-xs text-slate-400">
-                        {user?.email}
-                      </p>
+                      <p className="text-xs text-slate-400">{user?.email}</p>
                     </div>
-                    
+
                     <Link
                       to="/profile"
                       onClick={() => setIsProfileMenuOpen(false)}
@@ -129,7 +137,7 @@ function Navbar() {
                     >
                       👤 Ver Perfil
                     </Link>
-                    
+
                     <Link
                       to="/edit-profile"
                       onClick={() => setIsProfileMenuOpen(false)}
@@ -137,7 +145,7 @@ function Navbar() {
                     >
                       ✏️ Editar Perfil
                     </Link>
-                    
+
                     <Link
                       to="/dashboard"
                       onClick={() => setIsProfileMenuOpen(false)}
@@ -145,7 +153,7 @@ function Navbar() {
                     >
                       📊 Dashboard
                     </Link>
-                    
+
                     <div className="border-t border-slate-700 mt-1">
                       <button
                         onClick={handleLogout}
@@ -164,11 +172,26 @@ function Navbar() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
             >
-              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+              <svg
+                className="h-6 w-6"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
                 {isMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 )}
               </svg>
             </button>
@@ -186,14 +209,14 @@ function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                   className={`block px-3 py-2 text-base font-medium transition-colors ${
                     isActiveLink(item.path)
-                      ? 'text-green-400 bg-slate-800'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                      ? "text-green-400 bg-slate-800"
+                      : "text-slate-300 hover:text-white hover:bg-slate-700"
                   }`}
                 >
                   {item.name}
                 </Link>
               ))}
-              
+
               {!isAuthenticated && (
                 <div className="pt-2 border-t border-slate-700 space-y-1">
                   <Link
