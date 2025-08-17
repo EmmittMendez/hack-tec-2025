@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {v4 as uuidv4} from 'uuid'
 import * as yup from 'yup';
-import useStore from '../store/useStore';
+import useStore from '../store/userStore';
 
 // Esquema de validación con Yup
 const schema = yup.object({
