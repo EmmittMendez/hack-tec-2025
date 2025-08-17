@@ -1,195 +1,253 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { authService } from '../services/authService'
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const userStore = create(
+  persist(
+    (set, get) => ({
+      // Authentication state
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+      
+      // Quiz state
+      quizData: null,
+      quizProgress: 0,
+      quizCompleted: false,
+      
+      // Learning paths state
+      currentPath: null,
+      learningPaths: [],
+      
+      // Dashboard state
+      dashboardData: null,
+      
+      // Theme state
+      theme: 'dark',
+      
+      // Actions - Authentication
+      setUser: (userData) => set({ 
+        user: userData, 
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      }),
 
-const useUserStore = create((set, get) => ({
-  // Estado inicial
-  user: null,
-  isAuthenticated: false,
-  loading: false,
-  error: null,
+      setError: (error) => set({ error }),
 
-  // Función para limpiar errores
-  clearError: () => set({ error: null }),
-
-  // Función para verificar la autenticación al cargar la app
-  checkAuth: async () => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/users/profile/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+      clearError: () => set({ error: null }),
+      
+      login: async (email, password) => {
+        set({ isLoading: true, error: null });
         
-        if (response.ok) {
-          const userData = await response.json();
+        try {
+          const result = await authService.login(email, password);
+          
+          if (result.success) {
+            set({ 
+              user: result.data.user, 
+              isAuthenticated: true,
+              isLoading: false,
+              error: null
+            });
+            return result.data;
+          } else {
+            const errorMessage = result.error?.detail || result.error?.message || 'Error al iniciar sesión';
+            set({ 
+              isLoading: false,
+              error: errorMessage
+            });
+            throw new Error(errorMessage);
+          }
+        } catch (error) {
+          const errorMessage = error.message || 'Error de conexión';
           set({ 
-            user: userData, 
-            isAuthenticated: true,
-            error: null 
+            isLoading: false,
+            error: errorMessage
           });
-        } else {
-          // Token inválido, limpiar
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          throw error;
+        }
+      },
+      
+      register: async (userData) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const result = await authService.register(userData);
+          
+          if (result.success) {
+            set({ 
+              user: result.data.user, 
+              isAuthenticated: true,
+              isLoading: false,
+              error: null
+            });
+            return result.data;
+          } else {
+            let errorMessage = 'Error al registrar usuario';
+            
+            if (result.error) {
+              if (typeof result.error === 'object') {
+                // Si hay errores específicos por campo
+                const errorMessages = Object.values(result.error).flat().join(', ');
+                errorMessage = errorMessages;
+              } else {
+                errorMessage = result.error;
+              }
+            }
+            
+            set({ 
+              isLoading: false,
+              error: errorMessage
+            });
+            throw new Error(errorMessage);
+          }
+        } catch (error) {
+          const errorMessage = error.message || 'Error de conexión';
+          set({ 
+            isLoading: false,
+            error: errorMessage
+          });
+          throw error;
+        }
+      },
+      
+      logout: async () => {
+        set({ isLoading: true });
+        
+        try {
+          await authService.logout();
+        } catch (error) {
+          console.error('Error during logout:', error);
+        } finally {
           set({ 
             user: null, 
             isAuthenticated: false,
-            error: null 
+            currentPath: null,
+            quizData: null,
+            quizCompleted: false,
+            isLoading: false,
+            error: null
           });
         }
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        set({ 
-          user: null, 
-          isAuthenticated: false,
-          error: null 
-        });
-      }
-    }
-  },
+      },
 
-  // Función de registro
-  registerUser: async (userData) => {
-    set({ loading: true, error: null });
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/auth/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Registro exitoso, hacer login automático
-        await get().loginUser(userData.username, userData.password);
-      } else {
-        // Error en el registro
-        set({ 
-          loading: false, 
-          error: data.message || data.error || 'Error en el registro' 
-        });
-        throw new Error(data.message || 'Error en el registro');
-      }
-    } catch (error) {
-      set({ 
-        loading: false, 
-        error: error.message || 'Error de conexión' 
-      });
-      throw error;
-    }
-  },
-
-  // Función de login
-  loginUser: async (username, password) => {
-    set({ loading: true, error: null });
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/auth/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Guardar tokens
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
-        
-        // Obtener datos del usuario
-        const userResponse = await fetch(`${API_BASE_URL}/users/profile/`, {
-          headers: {
-            'Authorization': `Bearer ${data.access}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          set({ 
-            user: userData,
-            isAuthenticated: true,
-            loading: false,
-            error: null 
-          });
+      // Verificar autenticación al cargar la app
+      checkAuth: async () => {
+        if (authService.isAuthenticated()) {
+          const userData = authService.getUserData();
+          
+          if (userData) {
+            set({ 
+              user: userData, 
+              isAuthenticated: true,
+              isLoading: false 
+            });
+          } else {
+            // Si no hay datos del usuario, obtenerlos del servidor
+            try {
+              const result = await authService.getProfile();
+              
+              if (result.success) {
+                set({ 
+                  user: result.data, 
+                  isAuthenticated: true,
+                  isLoading: false 
+                });
+              } else {
+                // Si no se puede obtener el perfil, limpiar todo
+                authService.clearTokens();
+                set({ 
+                  user: null, 
+                  isAuthenticated: false,
+                  isLoading: false 
+                });
+              }
+            } catch (error) {
+              console.error('Error checking auth:', error);
+              authService.clearTokens();
+              set({ 
+                user: null, 
+                isAuthenticated: false,
+                isLoading: false 
+              });
+            }
+          }
         } else {
-          throw new Error('Error obteniendo datos del usuario');
+          set({ 
+            user: null, 
+            isAuthenticated: false,
+            isLoading: false 
+          });
         }
-      } else {
-        set({ 
-          loading: false, 
-          error: data.detail || data.message || 'Credenciales inválidas' 
-        });
-        throw new Error(data.detail || 'Credenciales inválidas');
-      }
-    } catch (error) {
-      set({ 
-        loading: false, 
-        error: error.message || 'Error de conexión' 
-      });
-      throw error;
+      },
+      
+      setLoading: (loading) => set({ 
+        isLoading: loading 
+      }),
+      
+      // Quiz actions
+      setQuizData: (data) => set({ 
+        quizData: data,
+        quizCompleted: true 
+      }),
+      
+      setQuizProgress: (progress) => set({ 
+        quizProgress: progress 
+      }),
+      
+      resetQuiz: () => set({ 
+        quizData: null, 
+        quizProgress: 0, 
+        quizCompleted: false 
+      }),
+      
+      // Learning paths actions
+      setCurrentPath: (path) => set({ 
+        currentPath: path 
+      }),
+      
+      setLearningPaths: (paths) => set({ 
+        learningPaths: paths 
+      }),
+      
+      addLearningPath: (path) => set((state) => ({
+        learningPaths: [...state.learningPaths, path]
+      })),
+      
+      updatePathProgress: (pathId, progress) => set((state) => ({
+        learningPaths: state.learningPaths.map(path =>
+          path.id === pathId ? { ...path, progress } : path
+        ),
+        currentPath: state.currentPath?.id === pathId 
+          ? { ...state.currentPath, progress }
+          : state.currentPath
+      })),
+      
+      // Dashboard actions
+      setDashboardData: (data) => set({ 
+        dashboardData: data 
+      }),
+      
+      updateUserStats: (stats) => set((state) => ({
+        user: state.user ? { ...state.user, ...stats } : null
+      })),
+      
+      // Theme actions
+      setTheme: (theme) => set({ 
+        theme 
+      })
+    }),
+    {
+      name: 'user-storage',
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated,
+        theme: state.theme 
+      })
     }
-  },
+  )
+);
 
-  // Función de logout
-  logoutUser: () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    set({ 
-      user: null, 
-      isAuthenticated: false, 
-      loading: false,
-      error: null 
-    });
-  },
-
-  // Funciones del quiz
-  quizScore: 0,
-  quizCompleted: false,
-  
-  setQuizScore: (score) => set({ quizScore: score }),
-  setQuizCompleted: (completed) => set({ quizCompleted: completed }),
-  
-  // Función para completar quiz y actualizar nivel
-  completeQuiz: async (score) => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/complete-quiz/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ score }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        set({ 
-          quizScore: score,
-          quizCompleted: true,
-          user: { ...get().user, education_level: data.new_level }
-        });
-      }
-    } catch (error) {
-      console.error('Error completing quiz:', error);
-    }
-  },
-}));
-
-export default useUserStore;
+export default userStore;
