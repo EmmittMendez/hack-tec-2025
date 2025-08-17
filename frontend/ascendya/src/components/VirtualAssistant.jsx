@@ -1,22 +1,30 @@
-import { useState, useRef, useEffect } from 'react';
-import { getChatbotResponse, startVoiceRecognition, speakText } from '../services/chatbotService';
+import { useState, useRef, useEffect } from "react";
+import {
+  getChatbotResponse,
+  startVoiceRecognition,
+  speakText,
+  checkMicrophonePermissions,
+  checkNetworkConnectivity,
+} from "../services/chatbotService";
 
 const VirtualAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
-      role: 'assistant',
-      content: '¡Hola! Soy Ascend AI, tu asistente virtual y mentor académico. Estoy aquí para ayudarte con tus estudios, responder preguntas sobre materias, crear planes de estudio y analizar documentos. ¿En qué puedo ayudarte hoy?',
-      timestamp: new Date().toISOString()
-    }
+      role: "assistant",
+      content:
+        "¡Hola! Soy Ascend AI, tu asistente virtual y mentor académico. Estoy aquí para ayudarte con tus estudios, responder preguntas sobre materias, crear planes de estudio y analizar documentos. ¿En qué puedo ayudarte hoy?",
+      timestamp: new Date().toISOString(),
+    },
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [attachedFile, setAttachedFile] = useState(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
-  
+  const [connectionStatus, setConnectionStatus] = useState("unknown"); // "good", "poor", "offline", "unknown"
+
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -30,43 +38,58 @@ const VirtualAssistant = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Verificar estado de conexión cuando se abre el asistente
+  useEffect(() => {
+    if (isOpen) {
+      checkNetworkConnectivity().then((result) => {
+        setConnectionStatus(result.success ? "good" : "poor");
+      });
+    }
+  }, [isOpen]);
+
   // Enviar mensaje
   const handleSendMessage = async () => {
     if (!inputMessage.trim() && !attachedFile) return;
 
     const newMessage = {
       id: Date.now(),
-      role: 'user',
+      role: "user",
       content: inputMessage,
       timestamp: new Date().toISOString(),
-      attachedFile: attachedFile ? {
-        name: attachedFile.name,
-        size: attachedFile.size,
-        type: attachedFile.type
-      } : null
+      attachedFile: attachedFile
+        ? {
+            name: attachedFile.name,
+            size: attachedFile.size,
+            type: attachedFile.type,
+          }
+        : null,
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
     setIsLoading(true);
 
     // Obtener historial para contexto
-    const conversationHistory = messages.slice(-10).map(msg => ({
+    const conversationHistory = messages.slice(-10).map((msg) => ({
       role: msg.role,
-      content: msg.content
+      content: msg.content,
     }));
 
     try {
-      const result = await getChatbotResponse(inputMessage, conversationHistory, attachedFile);
-      
+      const result = await getChatbotResponse(
+        inputMessage,
+        conversationHistory,
+        attachedFile
+      );
+
       if (result.success) {
         const assistantMessage = {
           id: Date.now() + 1,
-          role: 'assistant',
+          role: "assistant",
           content: result.response,
-          timestamp: result.timestamp
+          timestamp: result.timestamp,
         };
 
-        setMessages(prev => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, assistantMessage]);
 
         // Reproducir respuesta por voz si está habilitado
         if (voiceEnabled) {
@@ -75,55 +98,132 @@ const VirtualAssistant = () => {
       } else {
         const errorMessage = {
           id: Date.now() + 1,
-          role: 'assistant',
+          role: "assistant",
           content: `Lo siento, hubo un error: ${result.error}. Por favor intenta de nuevo.`,
           timestamp: new Date().toISOString(),
-          isError: true
+          isError: true,
         };
-        setMessages(prev => [...prev, errorMessage]);
+        setMessages((prev) => [...prev, errorMessage]);
       }
     } catch (error) {
       const errorMessage = {
         id: Date.now() + 1,
-        role: 'assistant',
-        content: 'Lo siento, hubo un problema técnico. Por favor intenta de nuevo.',
+        role: "assistant",
+        content:
+          "Lo siento, hubo un problema técnico. Por favor intenta de nuevo.",
         timestamp: new Date().toISOString(),
-        isError: true
+        isError: true,
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     }
 
-    setInputMessage('');
+    setInputMessage("");
     setAttachedFile(null);
     setIsLoading(false);
   };
 
-  // Manejar reconocimiento de voz
-  const handleVoiceInput = () => {
+  // Manejar reconocimiento de voz con verificaciones mejoradas
+  const handleVoiceInput = async () => {
     if (isRecording) {
       // Detener grabación
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.log("Recognition already stopped");
+        }
       }
       setIsRecording(false);
-    } else {
-      // Iniciar grabación
-      setIsRecording(true);
-      
-      recognitionRef.current = startVoiceRecognition(
-        (transcript) => {
-          setInputMessage(transcript);
-          setIsRecording(false);
-        },
-        (error) => {
-          console.error('Error de voz:', error);
-          setIsRecording(false);
-          alert('Error en el reconocimiento de voz: ' + error);
-        }
-      );
+      return;
+    }
 
-      if (recognitionRef.current) {
+    // Verificar conexión de red primero
+    const networkCheck = await checkNetworkConnectivity();
+    if (!networkCheck.success) {
+      const errorMessage = {
+        id: Date.now(),
+        role: "assistant",
+        content: `⚠️ Problema de conectividad: ${networkCheck.message}. Puedes escribir tu mensaje en el chat mientras tanto.`,
+        timestamp: new Date().toISOString(),
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
+    // Verificar permisos del micrófono
+    const micCheck = await checkMicrophonePermissions();
+    if (!micCheck.success) {
+      const errorMessage = {
+        id: Date.now(),
+        role: "assistant",
+        content: `🎤 ${micCheck.message}`,
+        timestamp: new Date().toISOString(),
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
+    // Iniciar grabación
+    setIsRecording(true);
+
+    recognitionRef.current = startVoiceRecognition(
+      (transcript) => {
+        setInputMessage(transcript);
+        setIsRecording(false);
+
+        // Mostrar mensaje de confirmación
+        const confirmMessage = {
+          id: Date.now(),
+          role: "assistant",
+          content: `🎤 Escuché: "${transcript}". ¿Quieres enviar este mensaje?`,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, confirmMessage]);
+      },
+      (error) => {
+        console.error("Error de voz:", error);
+        setIsRecording(false);
+
+        // Mostrar error como mensaje en el chat en lugar de alert
+        const errorMessage = {
+          id: Date.now(),
+          role: "assistant",
+          content: `🚫 ${error}`,
+          timestamp: new Date().toISOString(),
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      },
+      () => {
+        // Callback cuando inicia la grabación
+        const startMessage = {
+          id: Date.now(),
+          role: "assistant",
+          content: "🎤 Escuchando... Habla ahora.",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, startMessage]);
+      }
+    );
+
+    if (recognitionRef.current) {
+      try {
         recognitionRef.current.start();
+      } catch (error) {
+        console.error("Error starting recognition:", error);
+        setIsRecording(false);
+
+        const errorMessage = {
+          id: Date.now(),
+          role: "assistant",
+          content:
+            "🚫 No se pudo iniciar el reconocimiento de voz. Intenta escribir tu mensaje.",
+          timestamp: new Date().toISOString(),
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
       }
     }
   };
@@ -134,19 +234,29 @@ const VirtualAssistant = () => {
     if (file) {
       // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('El archivo es demasiado grande. Máximo 5MB.');
+        alert("El archivo es demasiado grande. Máximo 5MB.");
         return;
       }
-      
+
       // Validar tipos permitidos
       const allowedTypes = [
-        'text/plain', 'text/markdown', 'application/json',
-        'application/pdf', 'text/csv', 'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        "text/plain",
+        "text/markdown",
+        "application/json",
+        "application/pdf",
+        "text/csv",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ];
-      
-      if (!allowedTypes.includes(file.type) && !file.name.endsWith('.txt') && !file.name.endsWith('.md')) {
-        alert('Tipo de archivo no soportado. Usa: TXT, MD, JSON, PDF, CSV, DOC, DOCX');
+
+      if (
+        !allowedTypes.includes(file.type) &&
+        !file.name.endsWith(".txt") &&
+        !file.name.endsWith(".md")
+      ) {
+        alert(
+          "Tipo de archivo no soportado. Usa: TXT, MD, JSON, PDF, CSV, DOC, DOCX"
+        );
         return;
       }
 
@@ -158,18 +268,86 @@ const VirtualAssistant = () => {
   const removeAttachedFile = () => {
     setAttachedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   // Limpiar chat
+  // Limpiar chat
   const clearChat = () => {
-    setMessages([{
-      id: 1,
-      role: 'assistant',
-      content: '¡Hola! Soy Ascend AI, tu asistente virtual y mentor académico. ¿En qué puedo ayudarte hoy?',
-      timestamp: new Date().toISOString()
-    }]);
+    setMessages([
+      {
+        id: 1,
+        role: "assistant",
+        content:
+          "¡Hola! Soy Ascend AI, tu asistente virtual y mentor académico. ¿En qué puedo ayudarte hoy?",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+  };
+
+  // Función para diagnóstico del sistema
+  const runSystemDiagnostics = async () => {
+    const diagnosticMessage = {
+      id: Date.now(),
+      role: "assistant",
+      content: "🔍 Ejecutando diagnóstico del sistema...",
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, diagnosticMessage]);
+
+    const results = [];
+
+    // Verificar soporte de reconocimiento de voz
+    const voiceSupport =
+      "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
+    results.push(
+      `🎤 Reconocimiento de voz: ${
+        voiceSupport ? "✅ Soportado" : "❌ No soportado"
+      }`
+    );
+
+    // Verificar síntesis de voz
+    const ttsSupport = "speechSynthesis" in window;
+    results.push(
+      `🔊 Síntesis de voz: ${ttsSupport ? "✅ Soportado" : "❌ No soportado"}`
+    );
+
+    // Verificar conectividad
+    const networkCheck = await checkNetworkConnectivity();
+    results.push(
+      `🌐 Conectividad: ${
+        networkCheck.success ? "✅ Estable" : "⚠️ " + networkCheck.message
+      }`
+    );
+
+    // Verificar micrófono
+    const micCheck = await checkMicrophonePermissions();
+    results.push(
+      `🎙️ Micrófono: ${
+        micCheck.success ? "✅ Disponible" : "⚠️ " + micCheck.message
+      }`
+    );
+
+    // Verificar API de archivos
+    const fileApiSupport = "FileReader" in window;
+    results.push(
+      `📎 Subida de archivos: ${
+        fileApiSupport ? "✅ Soportado" : "❌ No soportado"
+      }`
+    );
+
+    const resultMessage = {
+      id: Date.now() + 1,
+      role: "assistant",
+      content: `📊 **Diagnóstico del Sistema**\n\n${results.join("\n")}\n\n${
+        networkCheck.success && micCheck.success && voiceSupport
+          ? "🎉 ¡Todo está funcionando correctamente!"
+          : "💡 Algunos componentes pueden tener limitaciones, pero puedes usar el chat por texto."
+      }`,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, resultMessage]);
   };
 
   if (!isOpen) {
@@ -200,7 +378,27 @@ const VirtualAssistant = () => {
                 <span className="text-lg">🤖</span>
               </div>
               <div>
-                <h3 className="font-bold text-white">Ascend AI</h3>
+                <h3 className="font-bold text-white flex items-center gap-2">
+                  Ascend AI
+                  {connectionStatus !== "unknown" && (
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        connectionStatus === "good"
+                          ? "bg-green-400 animate-pulse"
+                          : connectionStatus === "poor"
+                          ? "bg-yellow-400"
+                          : "bg-red-400"
+                      }`}
+                      title={
+                        connectionStatus === "good"
+                          ? "Conexión estable"
+                          : connectionStatus === "poor"
+                          ? "Conexión lenta"
+                          : "Sin conexión"
+                      }
+                    ></span>
+                  )}
+                </h3>
                 <p className="text-xs text-purple-100">Tu mentor académico</p>
               </div>
             </div>
@@ -208,11 +406,20 @@ const VirtualAssistant = () => {
               <button
                 onClick={() => setVoiceEnabled(!voiceEnabled)}
                 className={`p-2 rounded-lg transition-colors ${
-                  voiceEnabled ? 'bg-white/20 text-white' : 'bg-white/10 text-purple-200'
+                  voiceEnabled
+                    ? "bg-white/20 text-white"
+                    : "bg-white/10 text-purple-200"
                 }`}
-                title={voiceEnabled ? 'Desactivar voz' : 'Activar voz'}
+                title={voiceEnabled ? "Desactivar voz" : "Activar voz"}
               >
                 <span className="text-sm">🔊</span>
+              </button>
+              <button
+                onClick={runSystemDiagnostics}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                title="Diagnóstico del sistema"
+              >
+                <span className="text-sm">🔍</span>
               </button>
               <button
                 onClick={clearChat}
@@ -237,50 +444,62 @@ const VirtualAssistant = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${
+                message.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div
                 className={`max-w-[80%] p-3 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-purple-500 text-white'
+                  message.role === "user"
+                    ? "bg-purple-500 text-white"
                     : message.isError
-                    ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                    : 'bg-slate-800 text-slate-100'
+                    ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                    : "bg-slate-800 text-slate-100"
                 }`}
               >
-                <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                
+                <div className="text-sm whitespace-pre-wrap">
+                  {message.content}
+                </div>
+
                 {message.attachedFile && (
                   <div className="mt-2 p-2 bg-slate-700 rounded text-xs">
-                    <span className="text-blue-400">📎 {message.attachedFile.name}</span>
+                    <span className="text-blue-400">
+                      📎 {message.attachedFile.name}
+                    </span>
                     <span className="text-slate-400 ml-2">
                       ({(message.attachedFile.size / 1024).toFixed(1)} KB)
                     </span>
                   </div>
                 )}
-                
+
                 <div className="text-xs opacity-60 mt-1">
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </div>
               </div>
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-slate-800 text-slate-100 p-3 rounded-lg">
                 <div className="flex items-center gap-2">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div
+                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                   <span className="text-sm">Pensando...</span>
                 </div>
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -290,7 +509,9 @@ const VirtualAssistant = () => {
             <div className="flex items-center justify-between bg-slate-700 p-2 rounded">
               <div className="flex items-center gap-2">
                 <span className="text-blue-400">📎</span>
-                <span className="text-sm text-slate-200 truncate">{attachedFile.name}</span>
+                <span className="text-sm text-slate-200 truncate">
+                  {attachedFile.name}
+                </span>
                 <span className="text-xs text-slate-400">
                   ({(attachedFile.size / 1024).toFixed(1)} KB)
                 </span>
@@ -316,7 +537,7 @@ const VirtualAssistant = () => {
                 className="w-full bg-slate-800 text-white border border-slate-600 rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-purple-500"
                 rows="2"
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSendMessage();
                   }
@@ -324,22 +545,24 @@ const VirtualAssistant = () => {
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="flex flex-col gap-2">
               {/* Voice input */}
               <button
                 onClick={handleVoiceInput}
                 className={`p-2 rounded-lg transition-all ${
                   isRecording
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-purple-500 hover:bg-purple-600 text-white'
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-purple-500 hover:bg-purple-600 text-white"
                 }`}
                 disabled={isLoading}
-                title={isRecording ? 'Detener grabación' : 'Grabar mensaje de voz'}
+                title={
+                  isRecording ? "Detener grabación" : "Grabar mensaje de voz"
+                }
               >
-                <span className="text-lg">{isRecording ? '⏹️' : '🎤'}</span>
+                <span className="text-lg">{isRecording ? "⏹️" : "🎤"}</span>
               </button>
-              
+
               {/* File input */}
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -349,7 +572,7 @@ const VirtualAssistant = () => {
               >
                 <span className="text-lg">📎</span>
               </button>
-              
+
               {/* Send button */}
               <button
                 onClick={handleSendMessage}
@@ -361,7 +584,7 @@ const VirtualAssistant = () => {
               </button>
             </div>
           </div>
-          
+
           <input
             type="file"
             ref={fileInputRef}
@@ -369,9 +592,11 @@ const VirtualAssistant = () => {
             className="hidden"
             accept=".txt,.md,.json,.pdf,.csv,.doc,.docx"
           />
-          
+
           <div className="text-xs text-slate-400 mt-2">
-            💡 Puedes hacer preguntas de voz 🎤, adjuntar archivos 📎, o escribir directamente
+            💡 Puedes hacer preguntas de voz 🎤, adjuntar archivos 📎, o
+            escribir directamente. Si tienes problemas con la voz, usa el botón
+            🔍 para diagnóstico.
           </div>
         </div>
       </div>

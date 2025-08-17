@@ -419,8 +419,12 @@ function Resources() {
                   <span className="text-2xl">🤖</span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Ascend AI - Tu Mentor Virtual</h2>
-                  <p className="text-purple-300">Asistente inteligente disponible 24/7</p>
+                  <h2 className="text-xl font-bold text-white">
+                    Ascend AI - Tu Mentor Virtual
+                  </h2>
+                  <p className="text-purple-300">
+                    Asistente inteligente disponible 24/7
+                  </p>
                 </div>
               </div>
               <div className="hidden md:flex items-center gap-2 text-purple-300">
@@ -429,11 +433,12 @@ function Resources() {
                 </span>
               </div>
             </div>
-            
+
             <p className="text-slate-300 mb-6">
-              Tu compañero de estudio inteligente está aquí para ayudarte. Haz preguntas por voz, 
-              adjunta documentos para análisis, recibe planes de estudio personalizados y obtén 
-              respuestas inmediatas a tus dudas académicas.
+              Tu compañero de estudio inteligente está aquí para ayudarte. Haz
+              preguntas por voz, adjunta documentos para análisis, recibe planes
+              de estudio personalizados y obtén respuestas inmediatas a tus
+              dudas académicas.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -446,21 +451,25 @@ function Resources() {
                   Habla naturalmente y obtén respuestas instantáneas
                 </p>
               </div>
-              
+
               <div className="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">📎</span>
-                  <h3 className="font-semibold text-white">Análisis de Archivos</h3>
+                  <h3 className="font-semibold text-white">
+                    Análisis de Archivos
+                  </h3>
                 </div>
                 <p className="text-sm text-slate-300">
                   Adjunta PDFs, documentos y obtén análisis detallados
                 </p>
               </div>
-              
+
               <div className="bg-slate-900/50 rounded-lg p-4 border border-green-500/20">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">🎯</span>
-                  <h3 className="font-semibold text-white">Planes Personalizados</h3>
+                  <h3 className="font-semibold text-white">
+                    Planes Personalizados
+                  </h3>
                 </div>
                 <p className="text-sm text-slate-300">
                   Estrategias de estudio adaptadas a tu nivel
@@ -471,11 +480,15 @@ function Resources() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-slate-400">
                 <span>💡</span>
-                <span>Encuentra el botón flotante en la esquina inferior derecha</span>
+                <span>
+                  Encuentra el botón flotante en la esquina inferior derecha
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-purple-400">Powered by</span>
-                <span className="text-xs font-semibold text-purple-300">Google Gemini AI</span>
+                <span className="text-xs font-semibold text-purple-300">
+                  Google Gemini AI
+                </span>
               </div>
             </div>
           </div>
@@ -1225,7 +1238,7 @@ function Resources() {
           </div>
         </div>
       )}
-      
+
       {/* Asistente Virtual */}
       <VirtualAssistant />
     </div>
