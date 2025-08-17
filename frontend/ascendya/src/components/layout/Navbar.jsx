@@ -20,7 +20,7 @@ function Navbar() {
     { name: "Inicio", path: "/" },
     { name: "Recursos", path: "/resources" },
     { name: "Universidades", path: "/university" },
-    { name: "Quiz", path: "/quiz" },
+    { name: "Test vocacional", path: "/quiz" },
   ];
 
   // Links para usuarios autenticados
@@ -28,7 +28,7 @@ function Navbar() {
     { name: "Dashboard", path: "/dashboard" },
     { name: "Recursos", path: "/resources" },
     { name: "Universidades", path: "/university" },
-    { name: "Quiz", path: "/quiz" },
+    { name: "Test vocacional", path: "/quiz" },
   ];
 
   const navItems = isAuthenticated ? authNavItems : publicNavItems;
@@ -50,12 +50,12 @@ function Navbar() {
             </Link>
 
             {/* Desktop navigation */}
-            <div className="hidden md:ml-8 md:flex md:space-x-8">
+            <div className="hidden md:ml-8 md:flex md:space-x-8 text-4xl text-red-600">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 text-sm font-bold text-7xl transition-colors ${
                     isActiveLink(item.path)
                       ? "text-green-400 border-b-2 border-green-400"
                       : "text-slate-300 hover:text-white"
@@ -86,7 +86,6 @@ function Navbar() {
                 </Link>
               </>
             ) : (
-              // Profile dropdown cuando SÍ está autenticado
               <div className="relative">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}

@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLearningPathStore } from "../store/learningPathStore";
 import VirtualAssistant from "../components/VirtualAssistant";
+import educationalContentService from "../services/educationalContentService";
 
 function Resources() {
   const [activeCategory, setActiveCategory] = useState("todos");
   const [selectedPath, setSelectedPath] = useState(null);
   const [showPathDetails, setShowPathDetails] = useState(false);
+  const [currentVideos, setCurrentVideos] = useState([]);
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const [accessibilitySettings, setAccessibilitySettings] = useState({
     fontSize: "normal",
     highContrast: false,
@@ -47,132 +53,54 @@ function Resources() {
   const learningPaths = storedPaths.map((path, index) =>
     convertGeminiPath(path, index)
   );
-  const currentVideos = [
-    {
-      id: 1,
-      title: "Álgebra Lineal: Sistemas de Ecuaciones y Matrices",
-      subject: "Matemáticas",
-      progress: 45,
-      duration: "15 min 27 seg",
-      thumbnail:
-        "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=300&h=200&fit=crop",
-      instructor: "Dra. María González",
-      isLive: false,
-      hasSubtitles: true,
-      hasSignLanguage: true,
-      hasAudioDescription: true,
-      difficulty: "Intermedio",
-    },
-    {
-      id: 2,
-      title: "Química Orgánica: Hidrocarburos y Nomenclatura",
-      subject: "Química",
-      progress: 100,
-      duration: "22 min 15 seg",
-      thumbnail:
-        "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=300&h=200&fit=crop",
-      instructor: "Dr. Carlos Ruiz",
-      isLive: false,
-      hasSubtitles: true,
-      hasSignLanguage: false,
-      hasAudioDescription: true,
-      difficulty: "Avanzado",
-    },
-    {
-      id: 3,
-      title: "Física: Mecánica Clásica y Leyes de Newton",
-      subject: "Física",
-      progress: 23,
-      duration: "18 min 08 seg",
-      thumbnail:
-        "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=300&h=200&fit=crop",
-      instructor: "Dr. Ana Martín",
-      isLive: false,
-      hasSubtitles: true,
-      hasSignLanguage: true,
-      hasAudioDescription: false,
-      difficulty: "Intermedio",
-    },
-    {
-      id: 4,
-      title: "Historia Universal: Revolución Industrial",
-      subject: "Historia",
-      progress: 0,
-      duration: "25 min 33 seg",
-      thumbnail:
-        "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
-      instructor: "Lic. Diego López",
-      isLive: true,
-      hasSubtitles: true,
-      hasSignLanguage: true,
-      hasAudioDescription: true,
-      difficulty: "Básico",
-    },
-  ];
 
-  // Cursos de materias universitarias
-  const recommendedCourses = [
-    {
-      id: 1,
-      title: "Cálculo Diferencial e Integral",
-      instructor: "Dr. Sebastián Delmont",
-      rating: 4.8,
-      thumbnail:
-        "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=300&h=200&fit=crop",
-      category: "Matemáticas",
-      level: "Intermedio",
-      duration: "45h 25min",
-      university: "Para UNAM, IPN, UAM",
-    },
-    {
-      id: 2,
-      title: "Biología Molecular y Celular",
-      instructor: "Dra. Anna Espinoza",
-      rating: 4.7,
-      thumbnail:
-        "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&h=200&fit=crop",
-      category: "Biología",
-      level: "Avanzado",
-      duration: "38h 45min",
-      university: "Para Medicina",
-    },
-    {
-      id: 3,
-      title: "Literatura Mexicana e Hispanoamericana",
-      instructor: "Mtro. Carlos José Rojas",
-      rating: 4.5,
-      thumbnail:
-        "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
-      category: "Literatura",
-      level: "Intermedio",
-      duration: "28h 20min",
-      university: "Para Humanidades",
-    },
-    {
-      id: 4,
-      title: "Química Analítica y Cuantitativa",
-      instructor: "Dra. María Camila Lenis",
-      rating: 4.6,
-      thumbnail:
-        "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=300&h=200&fit=crop",
-      category: "Química",
-      level: "Avanzado",
-      duration: "42h 15min",
-      university: "Para Ingeniería Química",
-    },
-    {
-      id: 5,
-      title: "Geografía y Medio Ambiente",
-      instructor: "Lic. Jaivic Villegas",
-      rating: 4.4,
-      thumbnail:
-        "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=300&h=200&fit=crop",
-      category: "Geografía",
-      level: "Básico",
-      duration: "25h 30min",
-      university: "Para Ciencias Sociales",
-    },
-  ];
+  // Cargar contenido educativo personalizado
+  useEffect(() => {
+    const loadEducationalContent = async () => {
+      setLoading(true);
+      try {
+        // Cargar videos para "Continua con tus clases"
+        const videos =
+          await educationalContentService.getContinueStudyingVideos(
+            learningPaths,
+            4
+          );
+        setCurrentVideos(videos);
+
+        // Cargar cursos recomendados
+        const courses = await educationalContentService.getRecommendedCourses(
+          learningPaths,
+          6
+        );
+        setRecommendedCourses(courses);
+      } catch (error) {
+        console.error("Error loading educational content:", error);
+        // En caso de error, mantener arrays vacíos
+        setCurrentVideos([]);
+        setRecommendedCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEducationalContent();
+  }, [learningPaths.length]); // Re-cargar cuando cambien las rutas
+
+  // Manejar tecla Escape para cerrar modales
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        if (showVideoModal) {
+          closeVideoModal();
+        } else if (showPathDetails) {
+          closePathDetails();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [showVideoModal, showPathDetails]);
 
   const categories = [
     { id: "todos", name: "Todas las materias", count: 125 },
@@ -202,6 +130,53 @@ function Resources() {
   const closePathDetails = () => {
     setSelectedPath(null);
     setShowPathDetails(false);
+  };
+
+  // Función para reproducir video
+  const handleVideoClick = (video) => {
+    if (video.url && video.url !== "#") {
+      // Si es un video real de YouTube, abrirlo en modal
+      setSelectedVideo(video);
+      setShowVideoModal(true);
+    } else {
+      // Si es un video demo, mostrar mensaje informativo
+      alert(
+        `Video demo: ${video.title}\n\nEste es contenido de ejemplo. Para ver videos reales, configura tu API key de YouTube en el archivo .env`
+      );
+    }
+  };
+
+  // Función para cerrar modal de video
+  const closeVideoModal = () => {
+    setSelectedVideo(null);
+    setShowVideoModal(false);
+  };
+
+  // Función para obtener URL embebida de YouTube
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url || url === "#") return null;
+
+    // Extraer video ID de la URL de YouTube
+    const videoIdMatch = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
+    );
+    if (videoIdMatch && videoIdMatch[1]) {
+      return `https://www.youtube.com/embed/${videoIdMatch[1]}?autoplay=1&rel=0`;
+    }
+    return null;
+  };
+
+  // Función para reproducir curso
+  const handleCourseClick = (course) => {
+    if (course.isFromUserPath) {
+      alert(
+        `Curso personalizado: ${course.title}\n\nEste curso fue generado específicamente para tu ruta "${course.pathTitle}". En una implementación completa, esto llevaría a la plataforma del curso.`
+      );
+    } else {
+      alert(
+        `Curso: ${course.title}\n\nEste curso sería proporcionado por una plataforma educativa externa. En una implementación completa, esto redirigiría al proveedor del contenido.`
+      );
+    }
   };
 
   return (
@@ -462,129 +437,181 @@ function Resources() {
 
         {/* Videos/Clases Actuales */}
         <div className="mb-12">
-          <h2 className="text-xl font-bold mb-6">Continúa con tus clases</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {currentVideos.map((video, index) => (
-              <div
-                key={video.id}
-                className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg"
-                tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
-                role="button"
-                aria-label={`Reproducir clase: ${video.title}, duración ${video.duration}, progreso ${video.progress}%`}
-              >
-                <div className="relative">
-                  <img
-                    src={video.thumbnail}
-                    alt={`Clase de ${video.subject}: ${video.title}`}
-                    className="w-full h-40 object-cover rounded-lg"
-                  />
-
-                  {/* Accessibility features indicators */}
-                  <div className="absolute top-2 left-2 flex gap-1">
-                    {video.hasSubtitles && (
-                      <div
-                        className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded"
-                        title="Tiene subtítulos"
-                      >
-                        CC
-                      </div>
-                    )}
-                    {video.hasSignLanguage && (
-                      <div
-                        className="bg-purple-500 text-white text-xs px-1 py-0.5 rounded"
-                        title="Tiene lengua de señas"
-                      >
-                        🤟
-                      </div>
-                    )}
-                    {video.hasAudioDescription && (
-                      <div
-                        className="bg-orange-500 text-white text-xs px-1 py-0.5 rounded"
-                        title="Tiene audio descripción"
-                      >
-                        AD
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Play Button */}
-                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-black ml-1"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Progress Indicator */}
-                  {video.progress > 0 && (
-                    <div className="absolute top-3 right-3">
-                      <div
-                        className={`w-8 h-8 rounded-full border-2 ${
-                          video.progress === 100
-                            ? "border-green-500 bg-green-500"
-                            : "border-blue-500"
-                        } flex items-center justify-center`}
-                      >
-                        {video.progress === 100 ? (
-                          <svg
-                            className="w-4 h-4 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        ) : (
-                          <span className="text-xs font-bold text-white">
-                            {video.progress}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Duration */}
-                  <div className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    {video.duration}
-                  </div>
-
-                  {/* Live indicator */}
-                  {video.isLive && (
-                    <div className="absolute bottom-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded animate-pulse">
-                      🔴 EN VIVO
-                    </div>
-                  )}
-
-                  {/* Difficulty level */}
-                  <div className="absolute top-3 right-12 bg-slate-700/90 text-white text-xs px-2 py-1 rounded">
-                    {video.difficulty}
-                  </div>
-                </div>
-
-                <div className="mt-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
-                      {video.subject}
-                    </span>
-                  </div>
-                  <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-green-400 group-focus:text-green-400 transition-colors">
-                    {video.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {video.instructor}
-                  </p>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">Continúa con tus clases</h2>
+            {learningPaths.length > 0 && (
+              <span className="text-sm text-purple-400">
+                ✨ Personalizado para tus rutas
+              </span>
+            )}
           </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="bg-slate-700 h-40 rounded-lg mb-3"></div>
+                  <div className="h-4 bg-slate-700 rounded mb-2"></div>
+                  <div className="h-3 bg-slate-700 rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          ) : currentVideos.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {currentVideos.map((video, index) => (
+                <div
+                  key={video.id}
+                  onClick={() => handleVideoClick(video)}
+                  className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg"
+                  tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
+                  role="button"
+                  aria-label={`Reproducir clase: ${video.title}, duración ${video.duration}, progreso ${video.progress}%`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleVideoClick(video);
+                    }
+                  }}
+                >
+                  <div className="relative">
+                    <img
+                      src={video.thumbnail}
+                      alt={`Clase de ${video.subject}: ${video.title}`}
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+
+                    {/* Accessibility features indicators */}
+                    <div className="absolute top-2 left-2 flex gap-1">
+                      {video.hasSubtitles && (
+                        <div
+                          className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded"
+                          title="Tiene subtítulos"
+                        >
+                          CC
+                        </div>
+                      )}
+                      {video.hasSignLanguage && (
+                        <div
+                          className="bg-purple-500 text-white text-xs px-1 py-0.5 rounded"
+                          title="Tiene lengua de señas"
+                        >
+                          🤟
+                        </div>
+                      )}
+                      {video.hasAudioDescription && (
+                        <div
+                          className="bg-orange-500 text-white text-xs px-1 py-0.5 rounded"
+                          title="Tiene audio descripción"
+                        >
+                          AD
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Play Button */}
+                    <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
+                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-6 h-6 text-black ml-1"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Progress Indicator */}
+                    {video.progress > 0 && (
+                      <div className="absolute top-3 right-3">
+                        <div
+                          className={`w-8 h-8 rounded-full border-2 ${
+                            video.progress === 100
+                              ? "border-green-500 bg-green-500"
+                              : "border-blue-500"
+                          } flex items-center justify-center`}
+                        >
+                          {video.progress === 100 ? (
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : (
+                            <span className="text-xs font-bold text-white">
+                              {video.progress}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Duration */}
+                    <div className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {video.duration}
+                    </div>
+
+                    {/* Live indicator */}
+                    {video.isLive && (
+                      <div className="absolute bottom-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded animate-pulse">
+                        🔴 EN VIVO
+                      </div>
+                    )}
+
+                    {/* Difficulty level */}
+                    <div className="absolute top-3 right-12 bg-slate-700/90 text-white text-xs px-2 py-1 rounded">
+                      {video.difficulty}
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                        {video.subject}
+                      </span>
+                    </div>
+                    <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-green-400 group-focus:text-green-400 transition-colors">
+                      {video.title}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {video.instructor}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-slate-900 border border-slate-700 rounded-lg p-8 text-center">
+              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🎓</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">
+                {learningPaths.length > 0
+                  ? "Cargando contenido personalizado..."
+                  : "¡Comienza tu aprendizaje!"}
+              </h3>
+              <p className="text-slate-400 mb-4">
+                {learningPaths.length > 0
+                  ? "Estamos preparando videos basados en tus rutas de aprendizaje"
+                  : "Crea una ruta personalizada para ver contenido recomendado específicamente para ti"}
+              </p>
+              {learningPaths.length === 0 && (
+                <Link
+                  to="/quiz"
+                  className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <span>✨</span>
+                  Crear mi primera ruta
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mis Rutas con descarga */}
@@ -857,84 +884,136 @@ function Resources() {
 
         {/* Cursos recomendados */}
         <div className="mb-12">
-          <h2 className="text-xl font-bold mb-6">
-            Cursos para tu preparación universitaria
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">
+              Cursos para tu preparación universitaria
+            </h2>
+            {learningPaths.length > 0 && (
+              <span className="text-sm text-purple-400">
+                ✨ Basados en tus intereses
+              </span>
+            )}
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {recommendedCourses.map((course) => (
-              <div
-                key={course.id}
-                className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg"
-                tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
-                role="button"
-                aria-label={`Curso: ${course.title}, instructor: ${course.instructor}, calificación: ${course.rating} estrellas`}
-              >
-                <div className="relative">
-                  <img
-                    src={course.thumbnail}
-                    alt={`Curso de ${course.category}: ${course.title}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="bg-slate-700 h-32 rounded-lg mb-3"></div>
+                  <div className="h-4 bg-slate-700 rounded mb-2"></div>
+                  <div className="h-3 bg-slate-700 rounded w-3/4 mb-1"></div>
+                  <div className="h-3 bg-slate-700 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : recommendedCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              {recommendedCourses.map((course) => (
+                <div
+                  key={course.id}
+                  onClick={() => handleCourseClick(course)}
+                  className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg"
+                  tabIndex={accessibilitySettings.keyboardNavigation ? 0 : -1}
+                  role="button"
+                  aria-label={`Curso: ${course.title}, instructor: ${course.instructor}, calificación: ${course.rating} estrellas`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleCourseClick(course);
+                    }
+                  }}
+                >
+                  <div className="relative">
+                    <img
+                      src={course.thumbnail}
+                      alt={`Curso de ${course.category}: ${course.title}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
 
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-black ml-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-black ml-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Category badge */}
+                    <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {course.category}
+                    </div>
+
+                    {/* Level badge */}
+                    <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded">
+                      {course.level}
                     </div>
                   </div>
 
-                  {/* Category badge */}
-                  <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    {course.category}
-                  </div>
+                  <div className="mt-3">
+                    <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-green-400 group-focus:text-green-400 transition-colors mb-2">
+                      {course.title}
+                    </h3>
 
-                  {/* Level badge */}
-                  <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded">
-                    {course.level}
-                  </div>
-                </div>
+                    <p className="text-xs text-slate-400 mb-1">
+                      Por {course.instructor}
+                    </p>
 
-                <div className="mt-3">
-                  <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-green-400 group-focus:text-green-400 transition-colors mb-2">
-                    {course.title}
-                  </h3>
+                    <p className="text-xs text-blue-400 mb-2">
+                      {course.university}
+                    </p>
 
-                  <p className="text-xs text-slate-400 mb-1">
-                    Por {course.instructor}
-                  </p>
-
-                  <p className="text-xs text-blue-400 mb-2">
-                    {course.university}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <svg
-                        className="w-4 h-4 text-yellow-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="text-xs font-medium">
-                        {course.rating}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4 text-yellow-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <span className="text-xs font-medium">
+                          {course.rating}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-400">
+                        {course.duration}
                       </span>
                     </div>
-                    <span className="text-xs text-slate-400">
-                      {course.duration}
-                    </span>
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-slate-900 border border-slate-700 rounded-lg p-8 text-center">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">📚</span>
               </div>
-            ))}
-          </div>
+              <h3 className="text-lg font-bold text-white mb-2">
+                {learningPaths.length > 0
+                  ? "Generando cursos personalizados..."
+                  : "Cursos esperándote"}
+              </h3>
+              <p className="text-slate-400 mb-4">
+                {learningPaths.length > 0
+                  ? "Estamos seleccionando los mejores cursos basados en tus intereses"
+                  : "Crea una ruta de aprendizaje para ver cursos recomendados específicamente para ti"}
+              </p>
+              {learningPaths.length === 0 && (
+                <Link
+                  to="/quiz"
+                  className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <span>🎯</span>
+                  Crear mi ruta personalizada
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Sección de inclusión educativa */}
@@ -1199,6 +1278,122 @@ function Resources() {
                     Descargar
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de video */}
+      {showVideoModal && selectedVideo && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header del modal */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">🎥</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg line-clamp-1">
+                    {selectedVideo.title}
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    {selectedVideo.instructor} • {selectedVideo.duration}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeVideoModal}
+                className="w-8 h-8 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                aria-label="Cerrar video"
+              >
+                <svg
+                  className="w-5 h-5 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Contenido del video */}
+            <div
+              className="relative bg-black"
+              style={{ paddingBottom: "56.25%", height: 0 }}
+            >
+              {getYouTubeEmbedUrl(selectedVideo.url) ? (
+                <iframe
+                  src={getYouTubeEmbedUrl(selectedVideo.url)}
+                  title={selectedVideo.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute top-0 left-0 w-full h-full"
+                ></iframe>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                  <div className="text-center text-slate-400">
+                    <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">🎬</span>
+                    </div>
+                    <p className="font-medium">Video no disponible</p>
+                    <p className="text-sm mt-1">
+                      No se pudo cargar el video de YouTube
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Información adicional del video */}
+            <div className="p-4 border-t border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
+                    {selectedVideo.subject}
+                  </span>
+                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                    {selectedVideo.difficulty}
+                  </span>
+                  {selectedVideo.hasSubtitles && (
+                    <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
+                      CC Subtítulos
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() =>
+                    window.open(
+                      selectedVideo.url,
+                      "_blank",
+                      "noopener,noreferrer"
+                    )
+                  }
+                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded px-2 py-1"
+                >
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  Ver en YouTube
+                </button>
               </div>
             </div>
           </div>
