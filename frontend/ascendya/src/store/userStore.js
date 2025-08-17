@@ -1,195 +1,170 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-const API_BASE_URL = 'http://localhost:8000/api';
-
-const useUserStore = create((set, get) => ({
-  // Estado inicial
-  user: null,
-  isAuthenticated: false,
-  loading: false,
-  error: null,
-
-  // Función para limpiar errores
-  clearError: () => set({ error: null }),
-
-  // Función para verificar la autenticación al cargar la app
-  checkAuth: async () => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/users/profile/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+const userStore = create(
+  persist(
+    (set, get) => ({
+      // Authentication state
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      
+      // Quiz state
+      quizData: null,
+      quizProgress: 0,
+      quizCompleted: false,
+      
+      // Learning paths state
+      currentPath: null,
+      learningPaths: [],
+      
+      // Dashboard state
+      dashboardData: null,
+      
+      // Theme state
+      theme: 'dark',
+      
+      // Actions - Authentication
+      setUser: (userData) => set({ 
+        user: userData, 
+        isAuthenticated: true,
+        isLoading: false
+      }),
+      
+      login: (email, password) => {
+        set({ isLoading: true });
         
-        if (response.ok) {
-          const userData = await response.json();
-          set({ 
-            user: userData, 
-            isAuthenticated: true,
-            error: null 
-          });
-        } else {
-          // Token inválido, limpiar
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            error: null 
-          });
-        }
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        set({ 
-          user: null, 
-          isAuthenticated: false,
-          error: null 
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (email && password.length >= 6) {
+              const userData = {
+                id: Date.now(),
+                firstName: 'Edgar',
+                lastName: 'Cervantes Cruz',
+                username: email.split('@')[0],
+                email: email,
+                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face',
+                bio: 'Im on track for learning more about Cybersecurity, Artificial Intelligence, Data Base and Frontend.',
+                location: 'Puebla, México',
+                state: 'Puebla',
+                country: 'México',
+                linkedin: 'https://www.linkedin.com/in/edcruzw/',
+                joinDate: new Date().toISOString()
+              };
+              
+              set({ 
+                user: userData, 
+                isAuthenticated: true,
+                isLoading: false
+              });
+              resolve(userData);
+            } else {
+              set({ isLoading: false });
+              reject(new Error('Email y contraseña son requeridos'));
+            }
+          }, 1500);
         });
-      }
-    }
-  },
-
-  // Función de registro
-  registerUser: async (userData) => {
-    set({ loading: true, error: null });
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/auth/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Registro exitoso, hacer login automático
-        await get().loginUser(userData.username, userData.password);
-      } else {
-        // Error en el registro
-        set({ 
-          loading: false, 
-          error: data.message || data.error || 'Error en el registro' 
-        });
-        throw new Error(data.message || 'Error en el registro');
-      }
-    } catch (error) {
-      set({ 
-        loading: false, 
-        error: error.message || 'Error de conexión' 
-      });
-      throw error;
-    }
-  },
-
-  // Función de login
-  loginUser: async (username, password) => {
-    set({ loading: true, error: null });
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/auth/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Guardar tokens
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
+      },
+      
+      register: (userData) => { // ← Este método existe y funciona
+        set({ isLoading: true });
         
-        // Obtener datos del usuario
-        const userResponse = await fetch(`${API_BASE_URL}/users/profile/`, {
-          headers: {
-            'Authorization': `Bearer ${data.access}`,
-            'Content-Type': 'application/json',
-          },
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (userData.firstName && userData.lastName && userData.email) {
+              const newUser = {
+                id: Date.now(),
+                ...userData,
+                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face',
+                bio: 'Nuevo en Ascendia, ¡listo para aprender!',
+                joinDate: new Date().toISOString()
+              };
+              
+              set({ 
+                user: newUser, 
+                isAuthenticated: true,
+                isLoading: false
+              });
+              resolve(newUser);
+            } else {
+              set({ isLoading: false });
+              reject(new Error('Todos los campos son requeridos'));
+            }
+          }, 1500);
         });
-
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          set({ 
-            user: userData,
-            isAuthenticated: true,
-            loading: false,
-            error: null 
-          });
-        } else {
-          throw new Error('Error obteniendo datos del usuario');
-        }
-      } else {
-        set({ 
-          loading: false, 
-          error: data.detail || data.message || 'Credenciales inválidas' 
-        });
-        throw new Error(data.detail || 'Credenciales inválidas');
-      }
-    } catch (error) {
-      set({ 
-        loading: false, 
-        error: error.message || 'Error de conexión' 
-      });
-      throw error;
+      },
+      
+      logout: () => set({ 
+        user: null, 
+        isAuthenticated: false,
+        currentPath: null,
+        quizData: null,
+        quizCompleted: false,
+        isLoading: false
+      }),
+      
+      setLoading: (loading) => set({ 
+        isLoading: loading 
+      }),
+      
+      // Resto de acciones...
+      setQuizData: (data) => set({ 
+        quizData: data,
+        quizCompleted: true 
+      }),
+      
+      setQuizProgress: (progress) => set({ 
+        quizProgress: progress 
+      }),
+      
+      resetQuiz: () => set({ 
+        quizData: null, 
+        quizProgress: 0, 
+        quizCompleted: false 
+      }),
+      
+      setCurrentPath: (path) => set({ 
+        currentPath: path 
+      }),
+      
+      setLearningPaths: (paths) => set({ 
+        learningPaths: paths 
+      }),
+      
+      addLearningPath: (path) => set((state) => ({
+        learningPaths: [...state.learningPaths, path]
+      })),
+      
+      updatePathProgress: (pathId, progress) => set((state) => ({
+        learningPaths: state.learningPaths.map(path =>
+          path.id === pathId ? { ...path, progress } : path
+        ),
+        currentPath: state.currentPath?.id === pathId 
+          ? { ...state.currentPath, progress }
+          : state.currentPath
+      })),
+      
+      setDashboardData: (data) => set({ 
+        dashboardData: data 
+      }),
+      
+      updateUserStats: (stats) => set((state) => ({
+        user: state.user ? { ...state.user, ...stats } : null
+      })),
+      
+      setTheme: (theme) => set({ 
+        theme 
+      })
+    }),
+    {
+      name: 'user-storage',
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated,
+        theme: state.theme 
+      })
     }
-  },
+  )
+);
 
-  // Función de logout
-  logoutUser: () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    set({ 
-      user: null, 
-      isAuthenticated: false, 
-      loading: false,
-      error: null 
-    });
-  },
-
-  // Funciones del quiz
-  quizScore: 0,
-  quizCompleted: false,
-  
-  setQuizScore: (score) => set({ quizScore: score }),
-  setQuizCompleted: (completed) => set({ quizCompleted: completed }),
-  
-  // Función para completar quiz y actualizar nivel
-  completeQuiz: async (score) => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/complete-quiz/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ score }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        set({ 
-          quizScore: score,
-          quizCompleted: true,
-          user: { ...get().user, education_level: data.new_level }
-        });
-      }
-    } catch (error) {
-      console.error('Error completing quiz:', error);
-    }
-  },
-}));
-
-export default useUserStore;
+export default userStore;

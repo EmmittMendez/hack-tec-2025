@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
-import useUserStore from "./store/userStore";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -9,15 +7,10 @@ import Dashboard from "./pages/Dashboard";
 import Quiz from "./pages/Quiz";
 import Navbar from "./components/layout/Navbar";
 import Resources from "./pages/Resources";
+import University from "./pages/University";
+import EditProfile from "./pages/EditProfile";
 
 function App() {
-  const { checkAuth } = useUserStore();
-
-  useEffect(() => {
-    // Verificar el estado de autenticación al cargar la aplicación
-    checkAuth();
-  }, [checkAuth]);
-
   return (
     <Router>
       <Navbar />
@@ -29,6 +22,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/resources" element={<Resources />} />
+        <Route path="/university" element={<University />} />
+        <Route path="/EditProfile" element={<EditProfile />} />
       </Routes>
     </Router>
   );
