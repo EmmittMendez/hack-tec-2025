@@ -1,98 +1,120 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import generics, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_simplejwt.exceptions import TokenError
-from django.contrib.auth import logout
-from .serializers import UserSerializer, UserRegistrationSerializer, LoginSerializer
+from django.contrib.auth import authenticate
+from .models import User
+from .serializers import (
+    UserSerializer, UserRegistrationSerializer, 
+    JWTLoginSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer
+)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para el manejo de usuarios
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Los usuarios solo pueden ver su propio perfil
+        if self.request.user.is_staff:
+            return User.objects.all()
+        return User.objects.filter(id=self.request.user.id)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
-    Vista personalizada para obtener tokens JWT
+    Vista personalizada para obtener tokens JWT con datos adicionales del usuario
     """
-    def post(self, request, *args, **kwargs):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            refresh = RefreshToken.for_user(user)
-            user_data = UserSerializer(user).data
-            
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user': user_data,
-                'message': 'Login exitoso'
-            }, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer_class = CustomTokenObtainPairSerializer
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def register_user(request):
+class RegisterView(generics.CreateAPIView):
     """
-    Endpoint para registro de usuario
+    Vista para el registro de usuarios con JWT
     """
-    serializer = UserRegistrationSerializer(data=request.data)
-    if serializer.is_valid():
+    queryset = User.objects.all()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        
+        # Crear tokens JWT para el usuario recién registrado
         refresh = RefreshToken.for_user(user)
-        user_data = UserSerializer(user).data
+        access_token = refresh.access_token
         
         return Response({
+            'user': UserProfileSerializer(user).data,
             'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user': user_data,
-            'message': 'Usuario creado exitosamente'
+            'access': str(access_token),
+            'message': 'Usuario registrado exitosamente'
         }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def logout_user(request):
+class LoginView(generics.GenericAPIView):
     """
-    Endpoint para logout - Invalida el refresh token
+    Vista para el login de usuarios con JWT
     """
-    try:
-        refresh_token = request.data.get('refresh')
-        if refresh_token:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+    serializer_class = JWTLoginSerializer
+    permission_classes = [AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        logout(request)
+        user = serializer.validated_data['user']
+        
+        # Crear tokens JWT para el usuario
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+        
         return Response({
-            'message': 'Logout exitoso'
-        }, status=status.HTTP_200_OK)
-    except TokenError:
-        return Response({
-            'error': 'Error al hacer logout'
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'user': UserProfileSerializer(user).data,
+            'refresh': str(refresh),
+            'access': str(access_token),
+            'message': 'Login exitoso'
+        })
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def user_profile(request):
+class LogoutView(generics.GenericAPIView):
     """
-    Endpoint para obtener información del usuario autenticado
+    Vista para el logout de usuarios con JWT
     """
-    serializer = UserSerializer(request.user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class CustomTokenRefreshView(TokenRefreshView):
-    """
-    Vista personalizada para refresh token
-    """
+    permission_classes = [IsAuthenticated]
+    
     def post(self, request, *args, **kwargs):
         try:
-            response = super().post(request, *args, **kwargs)
-            if response.status_code == 200:
-                response.data['message'] = 'Token renovado exitosamente'
-            return response
-        except TokenError:
+            refresh_token = request.data.get("refresh")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                return Response({
+                    'message': 'Logout exitoso'
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': 'Refresh token requerido'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
             return Response({
-                'error': 'Token inválido o expirado'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+                'error': 'Token inválido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+    """
+    Vista para ver y actualizar el perfil del usuario
+    """
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user
