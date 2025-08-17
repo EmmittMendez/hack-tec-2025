@@ -6,6 +6,7 @@ import { useLearningPathStore } from "../store/learningPathStore";
 // Componente para gráfica circular simple
 const SimpleCircularChart = ({ data, title }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
+
   const colors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b"];
 
   return (
@@ -24,7 +25,6 @@ const SimpleCircularChart = ({ data, title }) => {
               stroke="#334155"
               strokeWidth="10"
             />
-
             {/* Círculos de progreso */}
             {data.map((item, index) => {
               const percentage = (item.value / total) * 100;
@@ -52,7 +52,6 @@ const SimpleCircularChart = ({ data, title }) => {
               );
             })}
           </svg>
-
           {/* Porcentaje en el centro */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
@@ -68,12 +67,12 @@ const SimpleCircularChart = ({ data, title }) => {
           </div>
         </div>
       </div>
-
       {/* Leyenda */}
       <div className="space-y-3">
         {data.map((item, index) => (
           <div key={index} className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+
               <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: colors[index % colors.length] }}
@@ -98,7 +97,6 @@ const SimpleBarChart = ({ data, title }) => {
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
       <h3 className="text-lg font-bold mb-6 text-white">{title}</h3>
-
       <div className="space-y-4">
         {data.map((item, index) => (
           <div key={index} className="space-y-2">
@@ -162,7 +160,6 @@ const SimpleLineChart = ({ data, title }) => {
               strokeWidth="1"
             />
           ))}
-
           {/* Línea principal */}
           <polyline
             fill="none"
@@ -197,7 +194,6 @@ const SimpleLineChart = ({ data, title }) => {
           ))}
         </div>
       </div>
-
       {/* Estadísticas */}
       <div className="grid grid-cols-3 gap-4 mt-4 text-center">
         <div>
@@ -260,6 +256,7 @@ const RouteCard = ({ route, isSelected, onClick }) => {
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1">
           <span className="text-slate-400">Progreso</span>
+
           <span className="text-green-400 font-medium">
             {Math.round(progressPercentage)}%
           </span>
@@ -355,6 +352,7 @@ function Dashboard() {
     { value: 35 },
     { value: 41 },
     { value: 48 },
+
     { value: 56 },
   ];
 
@@ -447,6 +445,7 @@ function Dashboard() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-yellow-400">
+
                   {Math.max(...routesData.map((route) => route.streak))}
                 </div>
                 <div className="text-sm text-slate-400">Mejor Racha</div>

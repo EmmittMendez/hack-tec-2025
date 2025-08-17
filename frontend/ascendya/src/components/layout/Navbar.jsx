@@ -128,7 +128,6 @@ function Navbar() {
                       </p>
                       <p className="text-xs text-slate-400">{user?.email}</p>
                     </div>
-
                     <Link
                       to="/profile"
                       onClick={() => setIsProfileMenuOpen(false)}
@@ -136,7 +135,6 @@ function Navbar() {
                     >
                       👤 Ver Perfil
                     </Link>
-
                     <Link
                       to="/edit-profile"
                       onClick={() => setIsProfileMenuOpen(false)}
@@ -144,7 +142,6 @@ function Navbar() {
                     >
                       ✏️ Editar Perfil
                     </Link>
-
                     <Link
                       to="/dashboard"
                       onClick={() => setIsProfileMenuOpen(false)}
@@ -152,7 +149,6 @@ function Navbar() {
                     >
                       📊 Dashboard
                     </Link>
-
                     <div className="border-t border-slate-700 mt-1">
                       <button
                         onClick={handleLogout}
@@ -215,7 +211,6 @@ function Navbar() {
                   {item.name}
                 </Link>
               ))}
-
               {!isAuthenticated && (
                 <div className="pt-2 border-t border-slate-700 space-y-1">
                   <Link

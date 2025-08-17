@@ -92,8 +92,8 @@ function Register() {
                 }`}
                 placeholder="Tu nombre"
               />
-              {errors.firstName && (
-                <p className="mt-1 text-sm text-red-400">{errors.firstName.message}</p>
+              {errors.nombres && (
+                <p className="mt-1 text-sm text-red-400">{errors.nombres.message}</p>
               )}
             </div>
 
@@ -111,8 +111,8 @@ function Register() {
                 }`}
                 placeholder="Tus apellidos"
               />
-              {errors.lastName && (
-                <p className="mt-1 text-sm text-red-400">{errors.lastName.message}</p>
+              {errors.apellidos && (
+                <p className="mt-1 text-sm text-red-400">{errors.apellidos.message}</p>
               )}
             </div>
 
@@ -180,7 +180,6 @@ function Register() {
               {registerError}
             </div>
           )}
-
           {/* Submit button */}
           <div>
             <button
