@@ -6,10 +6,10 @@ import * as yup from 'yup';
 import userStore from '../store/userStore';
 
 const schema = yup.object({
-  nombres: yup
+  firstName: yup
     .string()
     .required('El nombre es requerido'),
-  apellidos: yup
+  lastName: yup
     .string()
     .required('Los apellidos son requeridos'),
   email: yup
@@ -20,16 +20,10 @@ const schema = yup.object({
     .string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
     .required('La contraseña es requerida'),
-  password_confirm: yup
+  confirmPassword: yup
     .string()
     .oneOf([yup.ref('password')], 'Las contraseñas no coinciden')
-    .required('Confirma tu contraseña'),
-  ultimo_grado_estudios: yup
-    .string()
-    .required('El último grado de estudios es requerido'),
-  estado: yup
-    .string()
-    .required('El estado es requerido')
+    .required('Confirma tu contraseña')
 });
 
 function Register() {
@@ -48,7 +42,15 @@ function Register() {
   const onSubmit = async (data) => {
     try {
       setRegisterError('');
-      await registerUser(data); // Enviar datos directamente sin mapeo
+      await registerUser({ // ← Usar registerUser aquí
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        username: data.email.split('@')[0],
+        location: 'México',
+        state: 'Puebla',
+        country: 'México'
+      });
       
       navigate('/dashboard');
     } catch (error) {
@@ -76,17 +78,17 @@ function Register() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
-            {/* Nombres */}
+            {/* First Name */}
             <div>
-              <label htmlFor="nombres" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="firstName" className="block text-sm font-medium text-slate-300 mb-2">
                 Nombre
               </label>
               <input
-                {...register('nombres')}
+                {...register('firstName')}
                 type="text"
                 autoComplete="given-name"
                 className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                  errors.nombres ? 'border-red-500' : 'border-slate-600'
+                  errors.firstName ? 'border-red-500' : 'border-slate-600'
                 }`}
                 placeholder="Tu nombre"
               />
@@ -95,17 +97,17 @@ function Register() {
               )}
             </div>
 
-            {/* Apellidos */}
+            {/* Last Name */}
             <div>
-              <label htmlFor="apellidos" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="lastName" className="block text-sm font-medium text-slate-300 mb-2">
                 Apellidos
               </label>
               <input
-                {...register('apellidos')}
+                {...register('lastName')}
                 type="text"
                 autoComplete="family-name"
                 className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                  errors.apellidos ? 'border-red-500' : 'border-slate-600'
+                  errors.lastName ? 'border-red-500' : 'border-slate-600'
                 }`}
                 placeholder="Tus apellidos"
               />
@@ -154,94 +156,20 @@ function Register() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="password_confirm" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
                 Confirmar contraseña
               </label>
               <input
-                {...register('password_confirm')}
+                {...register('confirmPassword')}
                 type="password"
                 autoComplete="new-password"
                 className={`appearance-none relative block w-full px-3 py-3 border rounded-lg placeholder-slate-400 text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                  errors.password_confirm ? 'border-red-500' : 'border-slate-600'
+                  errors.confirmPassword ? 'border-red-500' : 'border-slate-600'
                 }`}
                 placeholder="••••••••"
               />
-              {errors.password_confirm && (
-                <p className="mt-1 text-sm text-red-400">{errors.password_confirm.message}</p>
-              )}
-            </div>
-
-            {/* Último grado de estudios */}
-            <div>
-              <label htmlFor="ultimo_grado_estudios" className="block text-sm font-medium text-slate-300 mb-2">
-                Último grado de estudios
-              </label>
-              <select
-                {...register('ultimo_grado_estudios')}
-                className={`appearance-none relative block w-full px-3 py-3 border rounded-lg text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                  errors.ultimo_grado_estudios ? 'border-red-500' : 'border-slate-600'
-                }`}
-              >
-                <option value="">Selecciona tu último grado</option>
-                <option value="Primaria">Primaria</option>
-                <option value="Secundaria">Secundaria</option>
-                <option value="Preparatoria">Preparatoria</option>
-                <option value="Universidad">Universidad</option>
-                <option value="Maestría">Maestría</option>
-                <option value="Doctorado">Doctorado</option>
-              </select>
-              {errors.ultimo_grado_estudios && (
-                <p className="mt-1 text-sm text-red-400">{errors.ultimo_grado_estudios.message}</p>
-              )}
-            </div>
-
-            {/* Estado */}
-            <div>
-              <label htmlFor="estado" className="block text-sm font-medium text-slate-300 mb-2">
-                Estado
-              </label>
-              <select
-                {...register('estado')}
-                className={`appearance-none relative block w-full px-3 py-3 border rounded-lg text-white bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                  errors.estado ? 'border-red-500' : 'border-slate-600'
-                }`}
-              >
-                <option value="">Selecciona tu estado</option>
-                <option value="aguascalientes">Aguascalientes</option>
-                <option value="baja_california">Baja California</option>
-                <option value="baja_california_sur">Baja California Sur</option>
-                <option value="campeche">Campeche</option>
-                <option value="coahuila">Coahuila</option>
-                <option value="colima">Colima</option>
-                <option value="chiapas">Chiapas</option>
-                <option value="chihuahua">Chihuahua</option>
-                <option value="cdmx">Ciudad de México</option>
-                <option value="durango">Durango</option>
-                <option value="guanajuato">Guanajuato</option>
-                <option value="guerrero">Guerrero</option>
-                <option value="hidalgo">Hidalgo</option>
-                <option value="jalisco">Jalisco</option>
-                <option value="mexico">Estado de México</option>
-                <option value="michoacan">Michoacán</option>
-                <option value="morelos">Morelos</option>
-                <option value="nayarit">Nayarit</option>
-                <option value="nuevo_leon">Nuevo León</option>
-                <option value="oaxaca">Oaxaca</option>
-                <option value="puebla">Puebla</option>
-                <option value="queretaro">Querétaro</option>
-                <option value="quintana_roo">Quintana Roo</option>
-                <option value="san_luis_potosi">San Luis Potosí</option>
-                <option value="sinaloa">Sinaloa</option>
-                <option value="sonora">Sonora</option>
-                <option value="tabasco">Tabasco</option>
-                <option value="tamaulipas">Tamaulipas</option>
-                <option value="tlaxcala">Tlaxcala</option>
-                <option value="veracruz">Veracruz</option>
-                <option value="yucatan">Yucatán</option>
-                <option value="zacatecas">Zacatecas</option>
-              </select>
-              {errors.estado && (
-                <p className="mt-1 text-sm text-red-400">{errors.estado.message}</p>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-400">{errors.confirmPassword.message}</p>
               )}
             </div>
           </div>
@@ -252,7 +180,6 @@ function Register() {
               {registerError}
             </div>
           )}
-
           {/* Submit button */}
           <div>
             <button

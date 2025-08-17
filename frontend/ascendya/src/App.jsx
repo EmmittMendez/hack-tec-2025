@@ -10,7 +10,6 @@ import Navbar from "./components/layout/Navbar";
 import Resources from "./pages/Resources";
 import University from "./pages/University";
 import EditProfile from "./pages/EditProfile";
-import userStore from "./store/userStore";
 
 function App() {
   const { checkAuth } = userStore();

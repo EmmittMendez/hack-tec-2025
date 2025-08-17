@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { authService } from '../services/authService'
 
 const userStore = create(
   persist(
@@ -9,7 +8,6 @@ const userStore = create(
       user: null,
       isAuthenticated: false,
       isLoading: false,
-      error: null,
       
       // Quiz state
       quizData: null,
@@ -30,164 +28,86 @@ const userStore = create(
       setUser: (userData) => set({ 
         user: userData, 
         isAuthenticated: true,
-        isLoading: false,
-        error: null
+        isLoading: false
       }),
-
-      setError: (error) => set({ error }),
-
-      clearError: () => set({ error: null }),
       
-      login: async (email, password) => {
-        set({ isLoading: true, error: null });
-        
-        try {
-          const result = await authService.login(email, password);
-          
-          if (result.success) {
-            set({ 
-              user: result.data.user, 
-              isAuthenticated: true,
-              isLoading: false,
-              error: null
-            });
-            return result.data;
-          } else {
-            const errorMessage = result.error?.detail || result.error?.message || 'Error al iniciar sesión';
-            set({ 
-              isLoading: false,
-              error: errorMessage
-            });
-            throw new Error(errorMessage);
-          }
-        } catch (error) {
-          const errorMessage = error.message || 'Error de conexión';
-          set({ 
-            isLoading: false,
-            error: errorMessage
-          });
-          throw error;
-        }
-      },
-      
-      register: async (userData) => {
-        set({ isLoading: true, error: null });
-        
-        try {
-          const result = await authService.register(userData);
-          
-          if (result.success) {
-            set({ 
-              user: result.data.user, 
-              isAuthenticated: true,
-              isLoading: false,
-              error: null
-            });
-            return result.data;
-          } else {
-            let errorMessage = 'Error al registrar usuario';
-            
-            if (result.error) {
-              if (typeof result.error === 'object') {
-                // Si hay errores específicos por campo
-                const errorMessages = Object.values(result.error).flat().join(', ');
-                errorMessage = errorMessages;
-              } else {
-                errorMessage = result.error;
-              }
-            }
-            
-            set({ 
-              isLoading: false,
-              error: errorMessage
-            });
-            throw new Error(errorMessage);
-          }
-        } catch (error) {
-          const errorMessage = error.message || 'Error de conexión';
-          set({ 
-            isLoading: false,
-            error: errorMessage
-          });
-          throw error;
-        }
-      },
-      
-      logout: async () => {
+      login: (email, password) => {
         set({ isLoading: true });
         
-        try {
-          await authService.logout();
-        } catch (error) {
-          console.error('Error during logout:', error);
-        } finally {
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            currentPath: null,
-            quizData: null,
-            quizCompleted: false,
-            isLoading: false,
-            error: null
-          });
-        }
-      },
-
-      // Verificar autenticación al cargar la app
-      checkAuth: async () => {
-        if (authService.isAuthenticated()) {
-          const userData = authService.getUserData();
-          
-          if (userData) {
-            set({ 
-              user: userData, 
-              isAuthenticated: true,
-              isLoading: false 
-            });
-          } else {
-            // Si no hay datos del usuario, obtenerlos del servidor
-            try {
-              const result = await authService.getProfile();
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (email && password.length >= 6) {
+              const userData = {
+                id: Date.now(),
+                firstName: 'Edgar',
+                lastName: 'Cervantes Cruz',
+                username: email.split('@')[0],
+                email: email,
+                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face',
+                bio: 'Im on track for learning more about Cybersecurity, Artificial Intelligence, Data Base and Frontend.',
+                location: 'Puebla, México',
+                state: 'Puebla',
+                country: 'México',
+                linkedin: 'https://www.linkedin.com/in/edcruzw/',
+                joinDate: new Date().toISOString()
+              };
               
-              if (result.success) {
-                set({ 
-                  user: result.data, 
-                  isAuthenticated: true,
-                  isLoading: false 
-                });
-              } else {
-                // Si no se puede obtener el perfil, limpiar todo
-                authService.clearTokens();
-                set({ 
-                  user: null, 
-                  isAuthenticated: false,
-                  isLoading: false 
-                });
-              }
-            } catch (error) {
-              console.error('Error checking auth:', error);
-              authService.clearTokens();
               set({ 
-                user: null, 
-                isAuthenticated: false,
-                isLoading: false 
+                user: userData, 
+                isAuthenticated: true,
+                isLoading: false
               });
+              resolve(userData);
+            } else {
+              set({ isLoading: false });
+              reject(new Error('Email y contraseña son requeridos'));
             }
-          }
-        } else {
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            isLoading: false 
-          });
-        }
+          }, 1500);
+        });
       },
+      
+      register: (userData) => { // ← Este método existe y funciona
+        set({ isLoading: true });
+        
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (userData.firstName && userData.lastName && userData.email) {
+              const newUser = {
+                id: Date.now(),
+                ...userData,
+                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face',
+                bio: 'Nuevo en Ascendia, ¡listo para aprender!',
+                joinDate: new Date().toISOString()
+              };
+              
+              set({ 
+                user: newUser, 
+                isAuthenticated: true,
+                isLoading: false
+              });
+              resolve(newUser);
+            } else {
+              set({ isLoading: false });
+              reject(new Error('Todos los campos son requeridos'));
+            }
+          }, 1500);
+        });
+      },
+      
+      logout: () => set({ 
+        user: null, 
+        isAuthenticated: false,
+        currentPath: null,
+        quizData: null,
+        quizCompleted: false,
+        isLoading: false
+      }),
       
       setLoading: (loading) => set({ 
         isLoading: loading 
       }),
       
-      // Quiz actions
+      // Resto de acciones...
       setQuizData: (data) => set({ 
         quizData: data,
         quizCompleted: true 
@@ -203,7 +123,6 @@ const userStore = create(
         quizCompleted: false 
       }),
       
-      // Learning paths actions
       setCurrentPath: (path) => set({ 
         currentPath: path 
       }),
@@ -225,7 +144,6 @@ const userStore = create(
           : state.currentPath
       })),
       
-      // Dashboard actions
       setDashboardData: (data) => set({ 
         dashboardData: data 
       }),
@@ -234,7 +152,6 @@ const userStore = create(
         user: state.user ? { ...state.user, ...stats } : null
       })),
       
-      // Theme actions
       setTheme: (theme) => set({ 
         theme 
       })
